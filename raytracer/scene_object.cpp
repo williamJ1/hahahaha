@@ -46,7 +46,7 @@ bool UnitSquare::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	
 	//check if dir dot n = 0
 	if (ray_dir.dot(n) == 0){
-		ray.intersection.none = true;
+		//ray.intersection.none = true;
 		return false;
 	}
 	
@@ -57,20 +57,39 @@ bool UnitSquare::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	Point3D inter_p = ray_origin + t * ray_dir;
 	if (inter_p[0] < -0.5 || inter_p[0] > 0.5 || inter_p[1] < -0.5 || inter_p[1] > 0.5){
 		//outside unit square
-		ray.intersection.none = true;
+		//ray.intersection.none = true;
 		return false;
 	}
 
 	//valid intersection 
-	//transform back to model coord
-	ray.intersection.none = false;
-	ray.intersection.normal =modelToWorld * n;
-	ray.intersection.point = modelToWorld * inter_p;
-	ray.intersection.t_value = t;
-	//std::cout << ray.intersection.point << "\n";
-	return true;
+	Point3D world_inter_p = modelToWorld * inter_p;
+	Vector3D world_n = modelToWorld * n;
+	if (ray.intersection.none == true) {
+		//no previous intersection
+		ray.intersection.none = false;
+		ray.intersection.normal = world_n;
+		ray.intersection.point = world_inter_p;
+		ray.intersection.t_value = t;
+		//std::cout << ray.intersection.point << "\n";
+		return true;
+	}
+	else if ((ray.intersection.point - ray.origin).length() 
+		> (world_inter_p - ray.origin).length()) {
+		//found a closer intersection
+		//replace
+		ray.intersection.normal = world_n;
+		ray.intersection.point = world_inter_p;
+		ray.intersection.t_value = t;
+		//std::cout << ray.intersection.point << "\n";
+		return true;
+	}
+	else {
+		//prev intersection is closer
+		//do not replace
+		return true;
+	}
 
-	//ray.intersection.none = true;
+
 	//return false;
 }
 
@@ -90,13 +109,13 @@ bool UnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	double tca = L.dot(ray_dir);
 	//if sphere lines on the other side of the origin
 	if (tca < 0){
-		ray.intersection.none = true;
+		//ray.intersection.none = true;
 		return false;
 	} 
 	double d = sqrt(L.dot(L) - tca * tca);
 	//if d bigger than radius, ray does not intersect sphere
 	if (d > 1){
-		ray.intersection.none = true;
+		//ray.intersection.none = true;
 		return false;
 	}
 	double thc = sqrt(1 - d * d);
@@ -109,7 +128,7 @@ bool UnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
     if (t0 < 0) { 
         t0 = t1; // if t0 is negative, let's use t1 instead 
         if (t0 < 0) {
-			ray.intersection.none = true;
+			//ray.intersection.none = true;
 			return false; // both t0 and t1 are negative
 		} 
     } 
@@ -120,7 +139,7 @@ bool UnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	n.normalize();
 	ray.intersection.normal = modelToWorld * n;
 	ray.intersection.point = modelToWorld * inter_p;
-	std::cout << ray.intersection.point << "\n";
+	//std::cout << ray.intersection.point << "\n";
 	return true;
 	
 	// Your goal here is to fill ray.intersection with correct values
