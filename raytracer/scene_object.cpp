@@ -51,7 +51,7 @@ bool UnitSquare::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	}
 	
 	//compute t
-	double t= (vt[0] - ray_origin).dot(n) / ray_dir.dot(n);
+	double t = (vt[0] - ray_origin).dot(n) / ray_dir.dot(n);
 
 	//check if point lies inside unit square
 	Point3D inter_p = ray_origin + t * ray_dir;
@@ -73,8 +73,7 @@ bool UnitSquare::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 		//std::cout << ray.intersection.point << "\n";
 		return true;
 	}
-	else if ((ray.intersection.point - ray.origin).length() 
-		> (world_inter_p - ray.origin).length()) {
+	else if (ray.intersection.t_value >= t) {
 		//found a closer intersection
 		//replace
 		ray.intersection.normal = world_n;
@@ -86,7 +85,7 @@ bool UnitSquare::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	else {
 		//prev intersection is closer
 		//do not replace
-		return true;
+		return false;
 	}
 
 
