@@ -109,13 +109,11 @@ bool UnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	double tca = L.dot(ray_dir);
 	//if sphere lines on the other side of the origin
 	if (tca < 0){
-		//ray.intersection.none = true;
 		return false;
 	} 
 	double d2 = L.dot(L) - tca * tca;
 	//if d bigger than radius, ray does not intersect sphere
 	if (d2 > 1){
-		//ray.intersection.none = true;
 		return false;
 	}
 	double thc = sqrt(1 - d2);
@@ -128,7 +126,6 @@ bool UnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
     if (t0 < 0) { 
         t0 = t1; // if t0 is negative, let's use t1 instead 
         if (t0 < 0) {
-			//ray.intersection.none = true;
 			return false; // both t0 and t1 are negative
 		} 
     } 
@@ -143,13 +140,12 @@ bool UnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 		n.normalize();
 		ray.intersection.normal = modelToWorld * n;
 		ray.intersection.point = modelToWorld * inter_p;
+		return true;
 	}
 
 	std::cout << "orgin" << ray_origin << "\n";
 	std::cout << ray.intersection.point << "\n";
-
-	return true;
-	
+	return false;
 	// Your goal here is to fill ray.intersection with correct values
 	// should an intersection occur.  This includes intersection.point, 
 	// intersection.normal, intersection.none, intersection.t_value.   
