@@ -16,9 +16,14 @@ void PointLight::shade( Ray3D& ray ) {
 	Point3D lightPos = this->get_position();
 	Point3D intersectPoint = ray.intersection.point;
 	Vector3D normalVector = ray.intersection.normal;
-	Vector3D viewVector = ray.dir.normalize()*ray.dir;
-	Vector3D light_vector = (lightPos - intersectPoint).normalize()*(lightPos - intersectPoint);
-	Vector3D difference = (light_vector + viewVector).normalize()*(light_vector + viewVector);
+	normalVector.normalize();
+	Vector3D viewVector = ray.dir;
+	viewVector.normalize();
+	Vector3D light_vector = (lightPos - intersectPoint);
+	light_vector.normalize();
+	//std::cout << (lightPos - intersectPoint).normalize();
+	Vector3D difference = (light_vector + viewVector);
+	difference.normalize();
 	double cos_specular = fmax(difference.dot(normalVector), 0.0);
 	double cos_diffuse = fmax(light_vector.dot(normalVector), 0.0);
 
@@ -27,7 +32,11 @@ void PointLight::shade( Ray3D& ray ) {
 	double ks = 1 - ka - kd;
 
 	ray.col = ka*ray.intersection.mat->ambient + kd*cos_diffuse*ray.intersection.mat->diffuse + ks*pow(cos_specular, ray.intersection.mat->specular_exp)*ray.intersection.mat->specular;
+	//double r = (double)rand() / (RAND_MAX) + 1;
+	//double g = (double)rand() / (RAND_MAX)+1;
+	//double b = (double)rand() / (RAND_MAX)+1;
 
+	//ray.col = Colour(r, g, b);
 	
 
 	// TODO: implement this function to fill in values for ray.col 

@@ -42,7 +42,7 @@ bool UnitSquare::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	Vector3D vec2 = vt[2] - vt[0];
 	Vector3D n = vec1.cross(vec2);
 	//square plain normal
-	n = n.normalize()*n;
+	n.normalize();
 	
 	//check if dir dot n = 0
 	if (ray_dir.dot(n) == 0){
@@ -55,7 +55,7 @@ bool UnitSquare::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 
 	//check if point lies inside unit square
 	Point3D inter_p = ray_origin + t * ray_dir;
-	if (inter_p[0] < -0.5 || inter_p[1] > 0.5 || inter_p[1] < -0.5 || inter_p[1] > 0.5){
+	if (inter_p[0] < -0.5 || inter_p[0] > 0.5 || inter_p[1] < -0.5 || inter_p[1] > 0.5){
 		//outside unit square
 		ray.intersection.none = true;
 		return false;
@@ -63,11 +63,15 @@ bool UnitSquare::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 
 	//valid intersection 
 	//transform back to model coord
+	ray.intersection.none = false;
 	ray.intersection.normal =modelToWorld * n;
 	ray.intersection.point = modelToWorld * inter_p;
 	ray.intersection.t_value = t;
-
+	//std::cout << ray.intersection.point << "\n";
 	return true;
+
+	//ray.intersection.none = true;
+	//return false;
 }
 
 bool UnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
@@ -113,10 +117,11 @@ bool UnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	ray.intersection.none = false;
 	Point3D inter_p = Point3D(ray_origin + t0*ray_dir);
 	Vector3D n = inter_p - sphere_center;
-	n = n.normalize()*n;
+	n.normalize();
 	ray.intersection.normal = modelToWorld * n;
 	ray.intersection.point = modelToWorld * inter_p;
-        
+	std::cout << ray.intersection.point << "\n";
+	return true;
 	
 	// Your goal here is to fill ray.intersection with correct values
 	// should an intersection occur.  This includes intersection.point, 
@@ -124,7 +129,9 @@ bool UnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	//
 	// HINT: Remember to first transform the ray into object space  
 	// to simplify the intersection test.
+	//ray.intersection.none = true;
+	//return false;
+
 	
-	return true;
 }
 
