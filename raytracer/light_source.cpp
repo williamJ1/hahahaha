@@ -17,21 +17,27 @@ void PointLight::shade( Ray3D& ray ) {
 	Point3D intersectPoint = ray.intersection.point;
 	Vector3D normalVector = ray.intersection.normal;
 	normalVector.normalize();
-	Vector3D viewVector = ray.dir;
+	Vector3D viewVector = -ray.dir;
 	viewVector.normalize();
 	Vector3D light_vector = (lightPos - intersectPoint);
 	light_vector.normalize();
-	//std::cout << (lightPos - intersectPoint).normalize();
 	Vector3D difference = (light_vector + viewVector);
 	difference.normalize();
 	double cos_specular = fmax(difference.dot(normalVector), 0.0);
+	//std::cout << cos_specular << "\n";
 	double cos_diffuse = fmax(light_vector.dot(normalVector), 0.0);
 
-	double ka = 0.3;
-	double kd = 0.3;
-	double ks = 1 - ka - kd;
+	double ka = 1;
+	double kd = 1;
+	double ks = 1;
+	//double ks = 3 - ka - kd;
 
 	ray.col = ka*ray.intersection.mat->ambient + kd*cos_diffuse*ray.intersection.mat->diffuse + ks*pow(cos_specular, ray.intersection.mat->specular_exp)*ray.intersection.mat->specular;
+	//clamp color to 1
+	//std::cout << ray.col << "\n";
+	if (ray.col[0] > 1) ray.col[0] = 1;
+	if (ray.col[1] > 1) ray.col[1] = 1;	
+	if (ray.col[2] > 1) ray.col[2] = 1;
 	//double r = (double)rand() / (RAND_MAX) + 1;
 	//double g = (double)rand() / (RAND_MAX)+1;
 	//double b = (double)rand() / (RAND_MAX)+1;
