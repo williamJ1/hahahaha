@@ -101,6 +101,7 @@ bool UnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	//transform ray into model space
 	Point3D ray_origin = worldToModel * (ray.origin);
 	Vector3D ray_dir = worldToModel * (ray.dir);
+	ray_dir.normalize();
 	Point3D sphere_center = Point3D(0,0,0);
 
 	
@@ -112,13 +113,13 @@ bool UnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 		//ray.intersection.none = true;
 		return false;
 	} 
-	double d = sqrt(L.dot(L) - tca * tca);
+	double d2 = L.dot(L) - tca * tca;
 	//if d bigger than radius, ray does not intersect sphere
-	if (d > 1){
+	if (d2 > 1){
 		//ray.intersection.none = true;
 		return false;
 	}
-	double thc = sqrt(1 - d * d);
+	double thc = sqrt(1 - d2);
 	t0 = tca - thc;
 	t1 = tca + thc;
 	
@@ -132,14 +133,22 @@ bool UnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 			return false; // both t0 and t1 are negative
 		} 
     } 
-	ray.intersection.t_value = t0; 
-	ray.intersection.none = false;
-	Point3D inter_p = Point3D(ray_origin + t0*ray_dir);
-	Vector3D n = inter_p - sphere_center;
-	n.normalize();
-	ray.intersection.normal = modelToWorld * n;
-	ray.intersection.point = modelToWorld * inter_p;
-	//std::cout << ray.intersection.point << "\n";
+
+	double previous_t_value = ray.intersection.t_value;
+	//check if current object is in front of previous stored object
+	if (previous_t_value > t0){
+		ray.intersection.t_value = t0; 
+		ray.intersection.none = false;
+		Point3D inter_p = Point3D(ray_origin + t0*ray_dir);
+		Vector3D n = inter_p - sphere_center;
+		n.normalize();
+		ray.intersection.normal = modelToWorld * n;
+		ray.intersection.point = modelToWorld * inter_p;
+	}
+
+	std::cout << "orgin" << ray_origin << "\n";
+	std::cout << ray.intersection.point << "\n";
+
 	return true;
 	
 	// Your goal here is to fill ray.intersection with correct values
@@ -150,7 +159,5 @@ bool UnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	// to simplify the intersection test.
 	//ray.intersection.none = true;
 	//return false;
-
-	
 }
 
