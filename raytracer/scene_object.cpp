@@ -41,9 +41,10 @@ bool UnitSquare::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	Vector3D vec1 = vt[1] - vt[0];
 	Vector3D vec2 = vt[2] - vt[0];
 	Vector3D n = vec1.cross(vec2);
+	//square plain normal
 	n = n.normalize()*n;
 	
-	//check if dir.n = 0
+	//check if dir dot n = 0
 	if (ray_dir.dot(n) == 0){
 		ray.intersection.none = true;
 		return false;
@@ -66,7 +67,7 @@ bool UnitSquare::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	ray.intersection.point = modelToWorld * inter_p;
 	ray.intersection.t_value = t;
 
-	
+	return true;
 }
 
 bool UnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
@@ -74,6 +75,47 @@ bool UnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	// TODO: implement intersection code for UnitSphere, which is centred 
 	// on the origin.  
 	//
+	//transform ray into model space
+	Point3D ray_origin = worldToModel * (ray.origin);
+	Vector3D ray_dir = worldToModel * (ray.dir);
+	Point3D sphere_center = Point3D(0,0,0);
+
+	
+	double t0, t1; // solutions for t if the ray intersects 
+	Vector3D L = sphere_center - ray_origin;
+	double tca = L.dot(ray_dir);
+	//if sphere lines on the other side of the origin
+	if (tca < 0){
+		ray.intersection.none = true;
+		return false;
+	} 
+	double d = sqrt(L.dot(L) - tca * tca);
+	//if d bigger than radius, ray does not intersect sphere
+	if (d > 1){
+		ray.intersection.none = true;
+		return false;
+	}
+	double thc = sqrt(1 - d * d);
+	t0 = tca - thc;
+	t1 = tca + thc;
+	
+	//find the smaller value of t0 and t1, whic represents the cloest intersection point
+	if (t0 > t1) std::swap(t0, t1); 
+ 
+    if (t0 < 0) { 
+        t0 = t1; // if t0 is negative, let's use t1 instead 
+        if (t0 < 0) {
+			ray.intersection.none = true;
+			return false; // both t0 and t1 are negative
+		} 
+    } 
+	ray.intersection.t_value = t0; 
+	ray.intersection.none = false;
+	Point3D inter_p = Point3D(ray_origin + t0*ray_dir);
+	ray.intersection.normal = modelToWorld * (inter_p - sphere_center);
+	ray.intersection.point = modelToWorld * inter_p;
+        
+	
 	// Your goal here is to fill ray.intersection with correct values
 	// should an intersection occur.  This includes intersection.point, 
 	// intersection.normal, intersection.none, intersection.t_value.   
@@ -81,6 +123,6 @@ bool UnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	// HINT: Remember to first transform the ray into object space  
 	// to simplify the intersection test.
 	
-	return false;
+	return true;
 }
 

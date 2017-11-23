@@ -160,7 +160,8 @@ void Raytracer::computeTransforms( SceneDagNode* node )
     SceneDagNode *childPtr;
     if (node->parent != NULL )
     {
-        node->modelToWorld = node->parent->modelToWorld*node->trans;
+		node->modelToWorld = node->parent->modelToWorld*node->trans; 
+		//modelToWorld is the transform from current child to world, trans is the transform from child to parent
         node->worldToModel = node->invtrans*node->parent->worldToModel; 
     }
     else
@@ -179,6 +180,7 @@ void Raytracer::computeTransforms( SceneDagNode* node )
 
 }
 
+//check if current ray intersect object in scene
 void Raytracer::traverseScene( SceneDagNode* node, Ray3D& ray ) {
     SceneDagNode *childPtr;
 
@@ -231,6 +233,7 @@ void Raytracer::flushPixelBuffer( std::string file_name ) {
 
 Colour Raytracer::shadeRay( Ray3D& ray ) {
     Colour col(0.0, 0.0, 0.0); 
+	//_root is scene graph
     traverseScene(_root, ray); 
 
     // Don't bother shading if the ray didn't hit 
