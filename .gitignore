@@ -33,3 +33,4 @@
 *.db
 *.opendb
 raytracer/Debug/
+raytracer/.vs/raytracer/
