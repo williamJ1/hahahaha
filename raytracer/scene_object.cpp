@@ -112,7 +112,9 @@ bool UnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	ray.intersection.t_value = t0; 
 	ray.intersection.none = false;
 	Point3D inter_p = Point3D(ray_origin + t0*ray_dir);
-	ray.intersection.normal = modelToWorld * (inter_p - sphere_center);
+	Vector3D n = inter_p - sphere_center;
+	n = n.normalize()*n;
+	ray.intersection.normal = modelToWorld * n;
 	ray.intersection.point = modelToWorld * inter_p;
         
 	
