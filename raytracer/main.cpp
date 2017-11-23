@@ -21,6 +21,9 @@ int main(int argc, char* argv[])
 	int width = 200;
 	int height = 200;
 
+	// int width = 600;
+	// int height = 600;
+
 	if (argc == 3) {
 		width = atoi(argv[1]);
 		height = atoi(argv[2]);

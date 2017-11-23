@@ -132,6 +132,17 @@ bool UnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 
 	double previous_t_value = ray.intersection.t_value;
 	//check if current object is in front of previous stored object
+	if (ray.intersection.none == true){
+		ray.intersection.t_value = t0; 
+		ray.intersection.none = false;
+		Point3D inter_p = Point3D(ray_origin + t0*ray_dir);
+		Vector3D n = inter_p - sphere_center;
+		n.normalize();
+		ray.intersection.normal = modelToWorld * n;
+		ray.intersection.point = modelToWorld * inter_p;
+		return true;
+	}
+	
 	if (previous_t_value > t0){
 		ray.intersection.t_value = t0; 
 		ray.intersection.none = false;
