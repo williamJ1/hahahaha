@@ -41,26 +41,26 @@ void PointLight::shade( Ray3D& ray ) {
 
 }
 
-/////////sample
-  //find the input light vector
-  vec3 light_vector = normalize(lightPos - vertPos);
-  //find the viewing_vector
-  vec3 eye_vec = normalize(vec3(0,0,0) - vertPos);
-  //find the reflect vector
-  vec3 reflect_vec = normalize(reflect(-light_vector, normalInterp));
-
-  //calculate crossproduct of eye vector and input light vector
-  vec3 difference = normalize(light_vector + eye_vec);
-
-  //calculate specular Color
-  //I have implemented both way to find specular cos value
-  //float cos_specular = max(dot(difference, normalInterp), 0.0);
-  float cos_specular = max(dot(reflect_vec, eye_vec), 0.0);
-
-  //calculate diffuse Color
-  float cos_diffuse = max(dot(light_vector, normalInterp), 0.0);
-  //float cos_diffuse = max(dot(light_vector, normalInterp), 0.0);
-
-
-
-  gl_FragColor = vec4(Ka*ambientColor+Kd*diffuseColor*cos_diffuse+Ks*specularColor*(pow(cos_specular, shininessVal)), 1.0);
+///////////sample
+//  //find the input light vector
+//  vec3 light_vector = normalize(lightPos - vertPos);
+//  //find the viewing_vector
+//  vec3 eye_vec = normalize(vec3(0,0,0) - vertPos);
+//  //find the reflect vector
+//  vec3 reflect_vec = normalize(reflect(-light_vector, normalInterp));
+//
+//  //calculate crossproduct of eye vector and input light vector
+//  vec3 difference = normalize(light_vector + eye_vec);
+//
+//  //calculate specular Color
+//  //I have implemented both way to find specular cos value
+//  //float cos_specular = max(dot(difference, normalInterp), 0.0);
+//  float cos_specular = max(dot(reflect_vec, eye_vec), 0.0);
+//
+//  //calculate diffuse Color
+//  float cos_diffuse = max(dot(light_vector, normalInterp), 0.0);
+//  //float cos_diffuse = max(dot(light_vector, normalInterp), 0.0);
+//
+//
+//
+//  gl_FragColor = vec4(Ka*ambientColor+Kd*diffuseColor*cos_diffuse+Ks*specularColor*(pow(cos_specular, shininessVal)), 1.0);
