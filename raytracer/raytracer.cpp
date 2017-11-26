@@ -231,22 +231,51 @@ void Raytracer::flushPixelBuffer( std::string file_name ) {
     delete _bbuffer;
 }
 
-Colour Raytracer::shadeRay( Ray3D& ray ) {
-    Colour col(0.0, 0.0, 0.0); 
+Colour Raytracer::shadeRay( Ray3D& ray , int depth, int d_end, Colour col) {
+	if (depth >= d_end){
+		//std::cout << "combine color" << col << "\n";
+		return col;
+	}
 	//_root is scene graph
     traverseScene(_root, ray); 
-
     // Don't bother shading if the ray didn't hit 
     // anything.
+	//ray.col = Colour(0,0,0);
     if (!ray.intersection.none) {
+		if (depth == 1) {
+			//std::cout << "wrong" << "\n";
+			//std::cout << "ray_origin" << ray.origin << "\n";
+			//std::cout << "ray direction" << ray.dir << "\n";
+			traverseScene(_root, ray);
+		}
         computeShading(ray); 
-        col = ray.col;  
+		Vector3D ray_dir = ray.dir;
+		ray_dir.normalize();
+		Vector3D ray_n = ray.intersection.normal;
+		ray_n.normalize();
+		Vector3D ref_dir = ray_dir - 2 * (ray_dir.dot(ray_n))*ray_n;
+		ref_dir.normalize();
+		
+		Ray3D ref_ray = Ray3D((ray.intersection.point + 0.0001 * ray_n), ref_dir);
+		//std::cout << "combine color" << col << "\n";
+        return shadeRay(ref_ray, depth+1, d_end, col + ray.col);
     }
+	else {
+		//std::cout << "combine color" << col << "\n";
+		return col;
+	}
 
     // You'll want to call shadeRay recursively (with a different ray, 
     // of course) here to implement reflection/refraction effects.  
-
-    return col; 
+	//calculate reflection
+	//Vector3D ray_dir = ray.dir;
+	//ray_dir.normalize();
+	//Vector3D ray_n = ray.intersection.normal;
+	//ray_n.normalize();
+	//Vector3D ref_dir = ray_dir - 2*(ray.dir.dot(ray_n))*ray_n;
+	//Ray3D ref_ray = Ray3D(ray.intersection.point, ref_dir);
+	//return shadeRay(ref_ray, depth, d_end, col);
+    
 }	
 
 void Raytracer::render( int width, int height, Point3D eye, Vector3D view, 
@@ -276,9 +305,14 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 			
 			Vector3D RayDirection = Vector3D(imagePlane[0], imagePlane[1], imagePlane[2]);
 			Ray3D ray = Ray3D(viewToWorld*origin, viewToWorld*RayDirection);
-
-			Colour col = shadeRay(ray); 
-
+			Colour init_color = Colour(0, 0, 0);
+			int depth = 2;
+			Colour col = shadeRay(ray, 0, depth, init_color);
+			//std::cout << "after" << col << "\n"; 
+			if (col[0] >1 || col[1]>1 || col[2]>1){
+				col = (1.0 / (double)depth)*col;
+			}
+				
 			_rbuffer[i*width+j] = int(col[0]*255);
 			_gbuffer[i*width+j] = int(col[1]*255);
 			_bbuffer[i*width+j] = int(col[2]*255);

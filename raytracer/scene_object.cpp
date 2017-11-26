@@ -52,10 +52,10 @@ bool UnitSquare::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	
 	//compute t
 	double t = (vt[0] - ray_origin).dot(n) / ray_dir.dot(n);
-
+	t = abs(t);
 	//check if point lies inside unit square
 	Point3D inter_p = ray_origin + t * ray_dir;
-	if (inter_p[0] < -0.5 || inter_p[0] > 0.5 || inter_p[1] < -0.5 || inter_p[1] > 0.5){
+	if (inter_p[0] < -0.5 || inter_p[0] > 0.5 || inter_p[1] < -0.5 || inter_p[1] > 0.5 || (inter_p[2]<-0.01 || inter_p[2] > 0.01)){
 		//outside unit square
 		//ray.intersection.none = true;
 		return false;
@@ -63,7 +63,7 @@ bool UnitSquare::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 
 	//valid intersection 
 	Point3D world_inter_p = modelToWorld * inter_p;
-	Vector3D world_n = modelToWorld * n;
+	Vector3D world_n = worldToModel.transpose() * n;
 	if (ray.intersection.none == true) {
 		//no previous intersection
 		ray.intersection.none = false;
@@ -138,7 +138,7 @@ bool UnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 		Point3D inter_p = Point3D(ray_origin + t0*ray_dir);
 		Vector3D n = inter_p - sphere_center;
 		n.normalize();
-		ray.intersection.normal = modelToWorld * n;
+		ray.intersection.normal = worldToModel.transpose() * n;
 		ray.intersection.point = modelToWorld * inter_p;
 		return true;
 	}
