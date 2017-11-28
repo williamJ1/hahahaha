@@ -52,10 +52,10 @@ bool UnitSquare::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	
 	//compute t
 	double t = (vt[0] - ray_origin).dot(n) / ray_dir.dot(n);
-	t = abs(t);
+	t = std::abs(t);
 	//check if point lies inside unit square
 	Point3D inter_p = ray_origin + t * ray_dir;
-	if (inter_p[0] < -0.5 || inter_p[0] > 0.5 || inter_p[1] < -0.5 || inter_p[1] > 0.5 || (inter_p[2]<-0.01 || inter_p[2] > 0.01)){
+	if (inter_p[0] < -0.5 || inter_p[0] > 0.5 || inter_p[1] < -0.5 || inter_p[1] > 0.5 || (inter_p[2]<-0.00001 || inter_p[2] > 0.00001)){
 		//outside unit square
 		//ray.intersection.none = true;
 		return false;

@@ -208,8 +208,25 @@ void Raytracer::computeShading( Ray3D& ray ) {
         // Each lightSource provides its own shading function.
 
         // Implement shadows here if needed.
+		//shoot a new ray
+		Vector3D ray_dir = curLight->light->get_position() - ray.intersection.point;
+		ray_dir.normalize();
+		Ray3D shadow_ray = Ray3D((ray.intersection.point + 0.01 * ray.intersection.normal), ray_dir);
+		traverseScene(_root, shadow_ray);
+		//double t_light = (curLight->light->get_position() - ray.intersection.point)/ray_dir;
 
-        curLight->light->shade(ray);
+		if (shadow_ray.intersection.none){
+			//std::cout << "in here";
+			//check if the object is between light and start point
+			curLight->light->shade(ray);
+			//ray.col = ray.col + Colour(1, 0, 0);
+		}
+		else {
+			ray.col = ray.col + Colour(0, 0, 0);
+			//curLight->light->shade(ray);
+		}
+
+		//curLight->light->shade(ray);
         curLight = curLight->next;
     }
 }
