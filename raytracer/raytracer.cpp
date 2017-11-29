@@ -233,8 +233,8 @@ void Raytracer::computeShading( Ray3D& ray, int* phong_count) {
 			temp = ray.col;
 			curLight->light->shade(ray);
 			*phong_count = *phong_count + 1;
-			//ray.col = light_ratio*ray.col + light_ratio*temp;
-			ray.col = 0.6*ray.col + 0.4*temp;
+			ray.col = light_ratio*ray.col + (1-light_ratio)*temp;
+			//ray.col = 0.6*ray.col + 0.4*temp;
 			//std::cout << ray.col << "\n";
 		}
 		else {
@@ -366,7 +366,7 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 			Vector3D RayDirection = Vector3D(imagePlane[0], imagePlane[1], imagePlane[2]);
 			Ray3D ray = Ray3D(viewToWorld*origin, viewToWorld*RayDirection);
 			Colour init_color = Colour(0, 0, 0);
-			int d_end = 2;
+			int d_end = 1;
 			Colour col = shadeRay(ray, 0, d_end, init_color);
 			//std::cout << "after" << col << "\n"; 
 			// if (col[0] >1 || col[1]>1 || col[2]>1){
