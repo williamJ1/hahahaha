@@ -377,12 +377,19 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 
 			// TODO: Convert ray to world space and call 
 			// shadeRay(ray) to generate pixel colour. 	
-			
-			Vector3D RayDirection = Vector3D(imagePlane[0], imagePlane[1], imagePlane[2]);
-			Ray3D ray = Ray3D(viewToWorld*origin, viewToWorld*RayDirection);
 			Colour init_color = Colour(0, 0, 0);
-			int d_end = 2;
-			Colour col = shadeRay(ray, 0, d_end, init_color);
+			Colour col = Colour(0, 0, 0);
+			int SA_times = 2;
+			double bias = (1.0 / factor) / SA_times;
+			for (int k = 0; k < SA_times; k++) {
+				for (int l = 0; l < SA_times; l++) {
+					Vector3D RayDirection = Vector3D(imagePlane[0] + bias*k, imagePlane[1] + bias*l, imagePlane[2]);
+					Ray3D ray = Ray3D(viewToWorld*origin, viewToWorld*RayDirection);
+					int d_end = 2;
+					col = col + (1.0/std::pow((double)SA_times,2)) * shadeRay(ray, 0, d_end, init_color);
+				}
+			}
+
 			col.clamp();
 			//std::cout << "after" << col << "\n"; 
 			// if (col[0] >1 || col[1]>1 || col[2]>1){
