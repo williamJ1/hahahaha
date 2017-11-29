@@ -37,13 +37,25 @@ void PointLight::shade( Ray3D& ray ) {
 	double ks = 1;
 	//double ks = 3 - ka - kd;
 
-	ray.col = ka*ray.intersection.mat->ambient + kd*cos_diffuse*ray.intersection.mat->diffuse + ks*pow(cos_specular, ray.intersection.mat->specular_exp)*ray.intersection.mat->specular;
+	Colour current_phong_color = (ka*ray.intersection.mat->ambient + kd*cos_diffuse*ray.intersection.mat->diffuse + ks*pow(cos_specular, ray.intersection.mat->specular_exp)*ray.intersection.mat->specular);
+	current_phong_color[0] = current_phong_color[0]*(this->_col_ambient[0]);
+	current_phong_color[1] = current_phong_color[1]*(this->_col_ambient[1]);
+	current_phong_color[2] = current_phong_color[2]*(this->_col_ambient[2]);
+	
+	//ray.col = 0.5*ray.col + 0.5*current_phong_color;
+	ray.col = current_phong_color;
+
 	//ray.col = ka*(0.8*ray.intersection.mat->ambient+0.2*this->_col_ambient) + kd*cos_diffuse*(0.8*ray.intersection.mat->diffuse+0.2*this->_col_diffuse) + ks*pow(cos_specular, ray.intersection.mat->specular_exp)*(0.8*ray.intersection.mat->specular+0.2*this->_col_specular);
 	//clamp color to 1
 	//std::cout << ray.col << "\n";
-	if (ray.col[0] > 1) ray.col[0] = 1;
-	if (ray.col[1] > 1) ray.col[1] = 1;	
-	if (ray.col[2] > 1) ray.col[2] = 1;
+	ray.col.clamp();
+
+	// if (ray.col[0] > 1) ray.col[0] = 1;
+	// if (ray.col[1] > 1) ray.col[1] = 1;	
+	// if (ray.col[2] > 1) ray.col[2] = 1;
+
+
+
 	//double r = (double)rand() / (RAND_MAX) + 1;
 	//double g = (double)rand() / (RAND_MAX)+1;
 	//double b = (double)rand() / (RAND_MAX)+1;

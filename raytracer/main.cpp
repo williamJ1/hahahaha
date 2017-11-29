@@ -44,8 +44,22 @@ int main(int argc, char* argv[])
 		12.8);
 
 	// Defines a point light source.
+
 	raytracer.addLightSource(new PointLight(Point3D(0, 0, 5),
 		Colour(0.9, 0.9, 0.9)));
+
+	// raytracer.addLightSource(new PointLight(Point3D(0, 12, 5),
+	// 	Colour(0.9, 0.9, 0.9)));
+
+	// raytracer.addLightSource(new PointLight(Point3D(-20, 15, 5),
+	// 	Colour(0.9, 0.9, 0.9)));
+
+	// raytracer.addLightSource(new PointLight(Point3D(0, -12, 5),
+	// 	Colour(0.9, 0.9, 0.9)));	
+
+	
+
+
 
 	// Add a unit square into the scene with material mat.
 	SceneDagNode* sphere = raytracer.addObject(new UnitSphere(), &gold);

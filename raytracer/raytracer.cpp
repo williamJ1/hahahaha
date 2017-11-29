@@ -201,30 +201,64 @@ void Raytracer::traverseScene( SceneDagNode* node, Ray3D& ray ) {
 
 }
 
-void Raytracer::computeShading( Ray3D& ray ) {
+void Raytracer::computeShading( Ray3D& ray, int* phong_count) {
     LightListNode* curLight = _lightSource;
+	LightListNode* curLight_temp = _lightSource;
+
+	double light_num = 0;
+
+	for (;;){
+		if(curLight_temp == NULL) break;
+		light_num ++;
+   		curLight_temp = curLight_temp->next;
+	}
+	//std::cout << light_num << "\n";
+	double light_ratio = 1/light_num;
+	//std::cout <<"ratio   " << light_ratio << "\n";
+
     for (;;) {
         if (curLight == NULL) break;
         // Each lightSource provides its own shading function.
-
         // Implement shadows here if needed.
+		//====================================
 		//shoot a new ray
 		Vector3D ray_dir = curLight->light->get_position() - ray.intersection.point;
 		ray_dir.normalize();
 		Ray3D shadow_ray = Ray3D((ray.intersection.point + 0.01 * ray.intersection.normal), ray_dir);
 		traverseScene(_root, shadow_ray);
 		//double t_light = (curLight->light->get_position() - ray.intersection.point)/ray_dir;
-
+		Colour temp = Colour(0, 0, 0);
 		if (shadow_ray.intersection.none){
-			//std::cout << "in here";
-			//check if the object is between light and start point
+			//TODO:check if the object is between light and start point
+			temp = ray.col;
 			curLight->light->shade(ray);
-			//ray.col = ray.col + Colour(1, 0, 0);
+			*phong_count = *phong_count + 1;
+			//ray.col = light_ratio*ray.col + light_ratio*temp;
+			ray.col = 0.6*ray.col + 0.4*temp;
+			//std::cout << ray.col << "\n";
 		}
 		else {
 			ray.col = ray.col + Colour(0, 0, 0);
-			//curLight->light->shade(ray);
 		}
+		//====================================
+		// Colour temp = ray.col;
+		// for (int i = -1; i < 1; i++){
+		// 	Vector3D ray_dir = curLight->light->get_position() - ray.intersection.point;
+		// 	ray_dir[0] = ray_dir[0] + i;
+		// 	ray_dir[1] = ray_dir[1] + i;
+		// 	ray_dir[2] = ray_dir[2] + i;
+		// 	ray_dir.normalize();
+		// 	Ray3D shadow_ray = Ray3D((ray.intersection.point + 0.01 * ray_dir), ray_dir);
+		// 	traverseScene(_root, shadow_ray);
+		// 	curLight->light->shade(ray);
+		// 	if(shadow_ray.intersection.none){
+		// 		temp = temp + 0.2*ray.col;
+		// 	}
+			
+		// }
+		// ray.col = temp;
+		//std::cout << temp << "\n";
+		//====================================
 
 		//curLight->light->shade(ray);
         curLight = curLight->next;
@@ -258,14 +292,22 @@ Colour Raytracer::shadeRay( Ray3D& ray , int depth, int d_end, Colour col) {
     // Don't bother shading if the ray didn't hit 
     // anything.
 	//ray.col = Colour(0,0,0);
+	int phong_count = 0;
+
     if (!ray.intersection.none) {
-		if (depth == 1) {
-			//std::cout << "wrong" << "\n";
-			//std::cout << "ray_origin" << ray.origin << "\n";
-			//std::cout << "ray direction" << ray.dir << "\n";
-			traverseScene(_root, ray);
-		}
-        computeShading(ray); 
+		// if (depth == 1) {
+		// 	//std::cout << "wrong" << "\n";
+		// 	//std::cout << "ray_origin" << ray.origin << "\n";
+		// 	//std::cout << "ray direction" << ray.dir << "\n";
+		// 	//traverseScene(_root, ray);
+		// 	//return Colour(0,0,0.9);
+		// }
+        computeShading(ray, &phong_count); 
+		//std::cout << "count" << phong_count<<"\n";
+		// ray.col[0] = ray.col[0] / phong_count;
+		// ray.col[1] = ray.col[1] / phong_count;
+		// ray.col[2] = ray.col[2] / phong_count;
+
 		Vector3D ray_dir = ray.dir;
 		ray_dir.normalize();
 		Vector3D ray_n = ray.intersection.normal;
@@ -307,6 +349,7 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
     viewToWorld = initInvViewMatrix(eye, view, up);
 
     // Construct a ray for each pixel.
+	double largest_color_value = 0.0;
     for (int i = 0; i < _scrHeight; i++) {
         for (int j = 0; j < _scrWidth; j++) {
             // Sets up ray origin and direction in view space, 
@@ -323,18 +366,40 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 			Vector3D RayDirection = Vector3D(imagePlane[0], imagePlane[1], imagePlane[2]);
 			Ray3D ray = Ray3D(viewToWorld*origin, viewToWorld*RayDirection);
 			Colour init_color = Colour(0, 0, 0);
-			int depth = 2;
-			Colour col = shadeRay(ray, 0, depth, init_color);
+			int d_end = 2;
+			Colour col = shadeRay(ray, 0, d_end, init_color);
 			//std::cout << "after" << col << "\n"; 
-			if (col[0] >1 || col[1]>1 || col[2]>1){
-				col = (1.0 / (double)depth)*col;
-			}
+			// if (col[0] >1 || col[1]>1 || col[2]>1){
+			// 	col = (1.0 / (double)d_end)*col;
+			// }
+			double current_max = fmax(col[0], col[1]);
+			current_max = fmax(current_max, col[2]);
+			largest_color_value = fmax(largest_color_value, current_max);
+
 				
 			_rbuffer[i*width+j] = int(col[0]*255);
 			_gbuffer[i*width+j] = int(col[1]*255);
 			_bbuffer[i*width+j] = int(col[2]*255);
+
+			
 		}
 	}
+
+	// std::cout<<"largest_color"<<largest_color_value<<"\n";
+	// if(largest_color_value > 1){
+	// 	double ratio = 1/largest_color_value;
+	// 	for (int i = 0; i < _scrHeight; i++) {
+	// 		for (int j = 0; j < _scrWidth; j++) {
+	// 		_rbuffer[i*width+j] = int(_rbuffer[i*width+j]*ratio);
+	// 		_gbuffer[i*width+j] = int(_gbuffer[i*width+j]*ratio);
+	// 		_bbuffer[i*width+j] = int(_bbuffer[i*width+j]*ratio);
+	// 		}
+	// 	}
+
+
+	// }
+
+
 
 	flushPixelBuffer(fileName);
 }
