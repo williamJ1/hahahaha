@@ -45,7 +45,10 @@ int main(int argc, char* argv[])
 
 	// Defines a point light source.
 
-	raytracer.addLightSource(new PointLight(Point3D(0, 0, 5),
+	//raytracer.addLightSource(new PointLight(Point3D(0, 0, 5),
+	//	Colour(0.9, 0.9, 0.9)));
+
+	raytracer.addLightSource(new AreaLight(Point3D(-1, -1, 5), 2.0,
 		Colour(0.9, 0.9, 0.9)));
 
 	// raytracer.addLightSource(new PointLight(Point3D(0, 12, 5),

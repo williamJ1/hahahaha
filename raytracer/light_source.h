@@ -18,6 +18,7 @@ class LightSource {
 public:
 	virtual void shade( Ray3D& ) = 0;
 	virtual Point3D get_position() const = 0; 
+	virtual double get_radius() const = 0;
 };
 
 // A point light is defined by its position in world space and its
@@ -30,11 +31,33 @@ public:
 	: _pos(pos), _col_ambient(ambient), _col_diffuse(diffuse), 
 	_col_specular(specular) {}
 	void shade( Ray3D& ray );
+	Colour shade(Ray3D& ray, PointLight& light);
 	Point3D get_position() const { return _pos; }
-	
+	double get_radius() const { return 0; }
 private:
 	Point3D _pos;
 	Colour _col_ambient;
 	Colour _col_diffuse; 
 	Colour _col_specular; 
+};
+
+
+
+// A area light is defined by its center radius and color
+class AreaLight : public LightSource {
+public:
+	AreaLight(Point3D center, double radius, Colour col) : _pos(center),_radius(radius), _col_ambient(col),
+		_col_diffuse(col), _col_specular(col) {}
+	AreaLight(Point3D center, double radius, Colour ambient, Colour diffuse, Colour specular)
+		: _pos(center), _radius(radius), _col_ambient(ambient), _col_diffuse(diffuse),
+		_col_specular(specular) {}
+	void shade(Ray3D& ray);
+	Point3D get_position() const { return _pos; }
+	double get_radius() const { return _radius; }
+private:
+	Point3D _pos;
+	double _radius;
+	Colour _col_ambient;
+	Colour _col_diffuse;
+	Colour _col_specular;
 };

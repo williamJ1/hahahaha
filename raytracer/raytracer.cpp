@@ -220,26 +220,60 @@ void Raytracer::computeShading( Ray3D& ray, int* phong_count) {
         if (curLight == NULL) break;
         // Each lightSource provides its own shading function.
         // Implement shadows here if needed.
-		//====================================
+		//====================================  point light==================================
 		//shoot a new ray
-		Vector3D ray_dir = curLight->light->get_position() - ray.intersection.point;
-		ray_dir.normalize();
-		Ray3D shadow_ray = Ray3D((ray.intersection.point + 0.01 * ray.intersection.normal), ray_dir);
-		traverseScene(_root, shadow_ray);
-		//double t_light = (curLight->light->get_position() - ray.intersection.point)/ray_dir;
-		Colour temp = Colour(0, 0, 0);
-		if (shadow_ray.intersection.none){
-			//TODO:check if the object is between light and start point
-			temp = ray.col;
-			curLight->light->shade(ray);
-			*phong_count = *phong_count + 1;
-			ray.col = light_ratio*ray.col + (1-light_ratio)*temp;
-			//ray.col = 0.6*ray.col + 0.4*temp;
-			//std::cout << ray.col << "\n";
+		if (false) {
+			Vector3D ray_dir = curLight->light->get_position() - ray.intersection.point;
+			ray_dir.normalize();
+			Ray3D shadow_ray = Ray3D((ray.intersection.point + 0.01 * ray.intersection.normal), ray_dir);
+			traverseScene(_root, shadow_ray);
+			//double t_light = (curLight->light->get_position() - ray.intersection.point)/ray_dir;
+			Colour temp = Colour(0, 0, 0);
+			if (shadow_ray.intersection.none){
+				//TODO:check if the object is between light and start point
+				temp = ray.col;
+				curLight->light->shade(ray);
+				*phong_count = *phong_count + 1;
+				ray.col = light_ratio*ray.col + (1-light_ratio)*temp;
+				//ray.col = 0.6*ray.col + 0.4*temp;
+				//std::cout << ray.col << "\n";
+			}
+			else {
+				ray.col = ray.col + Colour(0, 0, 0);
+			}
 		}
-		else {
-			ray.col = ray.col + Colour(0, 0, 0);
+
+		//=========================================soft shadow for area light
+		Point3D light_center = curLight->light->get_position();
+		double rad = curLight->light->get_radius();
+		double samples = 10 * rad;
+		Colour col = Colour(0, 0, 0);
+
+		for (int i = 0; i < samples; i++) {
+			double rand_x = -rad / 2 + ((double)rand() / (RAND_MAX)) * rad / 2;
+			double rand_y = -rad / 2 + ((double)rand() / (RAND_MAX)) * rad / 2;
+			Point3D light_pos = Point3D(light_center[0] + rand_x, light_center[1] + rand_y, light_center[2]);
+
+			Vector3D ray_dir = light_pos - ray.intersection.point;
+			ray_dir.normalize();
+			Ray3D shadow_ray = Ray3D((ray.intersection.point + 0.01 * ray.intersection.normal), ray_dir);
+			traverseScene(_root, shadow_ray);
+			//double t_light = (curLight->light->get_position() - ray.intersection.point)/ray_dir;
+			Colour temp = Colour(0, 0, 0);
+			if (shadow_ray.intersection.none) {
+				//TODO:check if the object is between light and start point
+				temp = ray.col;
+				curLight->light->shade(ray);
+				*phong_count = *phong_count + 1;
+				col = col + (1.0/samples) * light_ratio*ray.col + (1 - light_ratio)*temp;
+			}
+			else {
+				col = col + Colour(0, 0, 0);
+			}
+
 		}
+		ray.col = col;
+
 		//====================================
 		// Colour temp = ray.col;
 		// for (int i = -1; i < 1; i++){
