@@ -375,20 +375,33 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 			imagePlane[1] = (-double(height)/2 + 0.5 + i)/factor;
 			imagePlane[2] = -1;
 
-			// TODO: Convert ray to world space and call 
-			// shadeRay(ray) to generate pixel colour. 	
 			Colour init_color = Colour(0, 0, 0);
 			Colour col = Colour(0, 0, 0);
-			int SA_times = 2;
-			double bias = (1.0 / factor) / SA_times;
-			for (int k = 0; k < SA_times; k++) {
-				for (int l = 0; l < SA_times; l++) {
-					Vector3D RayDirection = Vector3D(imagePlane[0] + bias*k, imagePlane[1] + bias*l, imagePlane[2]);
-					Ray3D ray = Ray3D(viewToWorld*origin, viewToWorld*RayDirection);
-					int d_end = 2;
-					col = col + (1.0/std::pow((double)SA_times,2)) * shadeRay(ray, 0, d_end, init_color);
-				}
-			}
+			//dof loop
+			int DOF_times = 5;
+			for (int m = 0; m < DOF_times; m++) {
+
+				origin[0] = (origin[0] -1 + 2*(double)rand() / (RAND_MAX)) / (factor/5);
+				origin[1] = (origin[1] - 1 + 2 * (double)rand() / (RAND_MAX)) / (factor/5);
+				// supersampling loop
+				int SA_times = 1;
+				double bias = (1.0 / factor) / SA_times;
+				for (int k = 0; k < SA_times; k++) {
+					for (int l = 0; l < SA_times; l++) {
+						// Convert ray to world space and call 
+						// shadeRay(ray) to generate pixel colour. 	
+						Vector3D RayDirection = Point3D(imagePlane[0] + bias*k, imagePlane[1] + bias*l, imagePlane[2]) - origin;
+						Ray3D ray = Ray3D(viewToWorld*origin, viewToWorld*RayDirection);
+						int d_end = 2;
+						col = col + (1.0 / std::pow((double)SA_times, 2)) * shadeRay(ray, 0, d_end, init_color);
+					}
+				}//end of supersampling loop
+
+				
+			}//end of dof loop
+			col = (1.0 / (double)DOF_times) * col;
+
+
 
 			col.clamp();
 			//std::cout << "after" << col << "\n"; 
