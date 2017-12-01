@@ -49,6 +49,33 @@ SceneDagNode* Raytracer::addObject( SceneDagNode* parent,
 	return node;;
 }
 
+void Raytracer::addObject_tree( SceneDagNode* parent, 
+		SceneObject* obj, Material* mat, Matrix4x4 modelToWorld, Vector3D BB_max, Vector3D BB_min) {
+	SceneDagNode* node = new SceneDagNode( obj, mat, modelToWorld, BB_max, BB_min);
+	node->parent = parent;
+	node->next = NULL;
+	node->child = NULL;
+	
+	// Add the object to the parent's child list, this means
+	// whatever transformation applied to the parent will also
+	// be applied to the child.
+	if (parent->child == NULL) {
+		parent->child = node;
+	}
+	else {
+		parent = parent->child;
+		while (parent->next != NULL) {
+			parent = parent->next;
+		}
+		parent->next = node;
+	}
+	
+	return;
+}
+
+
+
+
 LightListNode* Raytracer::addLightSource( LightSource* light ) {
 	LightListNode* tmp = _lightSource;
 	_lightSource = new LightListNode( light, tmp );
@@ -340,6 +367,9 @@ Colour Raytracer::shadeRay( Ray3D& ray , int depth, int d_end, Colour col) {
 void Raytracer::render( int width, int height, Point3D eye, Vector3D view, 
         Vector3D up, double fov, std::string fileName ) {
     computeTransforms(_root);
+	computeBB(_root);
+	AABB_node tree_root = AABB_node();
+	buildAABBtree(_root, &tree_root);
     Matrix4x4 viewToWorld;
     _scrWidth = width;
     _scrHeight = height;
@@ -404,3 +434,121 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 	flushPixelBuffer(fileName);
 }
 
+
+void Raytracer::computeBB( SceneDagNode* node)
+{
+	//traverse all scene objects and find bounding box for all
+	if (node->obj != NULL){
+		node->BB_max = node->obj->BBmax(node->modelToWorld);
+		node->BB_min = node->obj->BBmin(node->modelToWorld);
+	}
+	// std::cout << "BB_MAX:  " << node->BB_max << "\n";
+	// std::cout << "BB_MIN:  " << node->BB_min << "\n";
+
+	SceneDagNode * childPtr = node->child;
+	while (childPtr != NULL){
+		computeBB(childPtr);
+		childPtr = childPtr->next;
+	}
+}
+
+
+//build AABB tree
+//find current bounding box 
+void Raytracer::buildAABBtree( SceneDagNode* node_list, AABB_node* tree_node)
+{
+	//assume all SceneDagNode has no first term, first term is node_list->next
+	//Case1: node_list has 1 item, no need to continue partition
+	SceneDagNode* child = node_list->child;
+	std::cout << "here1" << "\n";
+
+	if (child->next == NULL){
+		tree_node->scene_obj = child;
+		std::cout << "inhere3" << "\n";
+		return;
+	}
+	//Cse2: node_list has several items, do BSP 
+	//assume can go through all nodes using node_list->next
+	//find current bounding box
+	Vector3D cur_min = Vector3D(999.0, 999.0, 999.0);
+	Vector3D cur_max = Vector3D(-999.0, -999.0, -999.0);
+	SceneDagNode* temp_node = node_list->child;
+	while(temp_node != NULL){
+		cur_min[0] = fmin(temp_node->BB_min[0], cur_min[0]);
+		cur_min[1] = fmin(temp_node->BB_min[1], cur_min[1]);
+		cur_min[2] = fmin(temp_node->BB_min[2], cur_min[2]);
+
+		cur_max[0] = fmax(temp_node->BB_max[0], cur_max[0]);
+		cur_max[1] = fmax(temp_node->BB_max[1], cur_max[1]);
+		cur_max[2] = fmax(temp_node->BB_max[2], cur_max[2]);
+
+		temp_node = temp_node->next;
+	}
+
+	//set current bounding box size 
+	tree_node->BB_max = cur_max;
+	tree_node->BB_min = cur_min;
+	std::cout << "max" << cur_max << "\n";
+	std::cout << "min" << cur_min << "\n";
+
+
+
+	//partition current bounding box and seperate objects according to the plain
+	//always split along x axis
+	//find normal of the plain, and a point on plain where the normal shoot out:
+	double delta_x = (cur_max[0] - cur_min[0])/2;
+	Vector3D normal_vec = Vector3D(-delta_x, 0, 0);
+	Point3D int_point = Point3D((cur_min[0]+delta_x) , cur_max[1], cur_max[2]);
+    SceneDagNode *left = new SceneDagNode();
+	SceneDagNode *right = new SceneDagNode();
+	//traverse through list of nodes and seperate into left and right
+	SceneDagNode *current_node = node_list->child;
+	//SceneDagNode o = *current_node;
+	while(current_node != NULL){
+		//find object center
+		Point3D object_center = current_node->modelToWorld * Point3D(0, 0, 0);
+		Vector3D object_dir = object_center - int_point;
+		double cos_value = normal_vec.dot(object_dir);
+		if (cos_value <= 0){
+			// //SceneDagNode *current_node = temp_node;
+			// //add current node to left node_list end
+			// // SceneDagNode *left_temp = &left;
+			// // while (left_temp->next != NULL){
+			// // 	left_temp = left_temp->next;
+			// // }
+			// // left_temp->next = current_node;
+			// // left_temp->child = current_node;
+			// left->next = &o;
+			// left->child = &o;
+			addObject_tree(left, current_node->obj, current_node->mat, current_node->modelToWorld, current_node->BB_max, current_node->BB_min);
+			
+		}
+		else{
+			// //SceneDagNode *current_node = temp_node;
+			// //add current node to left node_list end
+			// // SceneDagNode *right_temp = &right;
+			// // while (right_temp->next != NULL){
+			// // 	right_temp = right_temp->next;
+			// // }
+			// // right_temp->next = current_node;
+			// // right_temp->child = current_node;
+			// right->next = &o;
+			// right->child = &o;
+			addObject_tree(right, current_node->obj, current_node->mat, current_node->modelToWorld, current_node->BB_max, current_node->BB_min);
+		}
+		current_node = current_node->next;
+	}
+	AABB_node* left_tree_node;
+	AABB_node* right_tree_node;
+	left_tree_node->parent = tree_node;
+	right_tree_node->parent = tree_node;
+
+	tree_node->left = left_tree_node;
+	tree_node->right = right_tree_node;
+
+	buildAABBtree(left, left_tree_node);
+	buildAABBtree(right, right_tree_node);
+
+	//should not reach here
+	return;
+}

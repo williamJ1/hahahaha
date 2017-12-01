@@ -81,11 +81,13 @@ private:
 
 class Matrix4x4 {
 public:
-  Matrix4x4(); 
+  Matrix4x4();  
   Matrix4x4(const Matrix4x4& other); 
   Matrix4x4& operator=(const Matrix4x4& other); 
 
   Vector4D getRow(int row) const; 
+  void set_value(int pos, double value);
+  double get_value(int pos);
   double *getRow(int row); 
   Vector4D getColumn(int col) const; 
 

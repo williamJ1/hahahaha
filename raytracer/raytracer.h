@@ -27,6 +27,8 @@ struct LightListNode {
 	LightListNode* next;
 };
 
+
+
 // The scene graph, containing objects in the scene.
 struct SceneDagNode {
 	SceneDagNode() : 
@@ -36,6 +38,10 @@ struct SceneDagNode {
 
 	SceneDagNode( SceneObject* obj, Material* mat ) : 
 		obj(obj), mat(mat), next(NULL), parent(NULL), child(NULL) {
+		}
+
+	SceneDagNode( SceneObject* obj, Material* mat, Matrix4x4 modelToWorld, Vector3D BB_max, Vector3D BB_min) : 
+		obj(obj), mat(mat), next(NULL), parent(NULL), child(NULL), modelToWorld(modelToWorld), BB_max(BB_max), BB_min(BB_min) {
 		}
 	
 	~SceneDagNode() {
@@ -53,12 +59,40 @@ struct SceneDagNode {
 	Matrix4x4 invtrans;
 	Matrix4x4 modelToWorld;
 	Matrix4x4 worldToModel;
+	Vector3D BB_max = Vector3D(0,0,0);
+	Vector3D BB_min = Vector3D(0,0,0);
 	
 	// Internal structure of the tree, you shouldn't have to worry 
 	// about them.
 	SceneDagNode* next;
 	SceneDagNode* parent;
 	SceneDagNode* child;
+};
+
+//define structure for AABB bounding box BSP algorithm
+struct AABB_node {
+	AABB_node() : 
+		left(NULL), right(NULL), parent(NULL) {
+	}	
+
+	~AABB_node() {
+	}
+
+	SceneDagNode* scene_obj;
+	// Each node maintains a transformation matrix, which maps the 
+	// geometry from object space to world space and the inverse.
+	Matrix4x4 trans;
+	Matrix4x4 invtrans;
+	Matrix4x4 modelToWorld;
+	Matrix4x4 worldToModel;
+	Vector3D BB_max;
+	Vector3D BB_min;
+	
+	// Internal structure of the tree, you shouldn't have to worry 
+	// about them.
+	AABB_node* left;
+	AABB_node* right;
+	AABB_node* parent;
 };
 
 class Raytracer {
@@ -78,6 +112,8 @@ public:
 	SceneDagNode* addObject( SceneObject* obj, Material* mat ) {
 		return addObject(_root, obj, mat);
 	}
+
+	
 	
 	// Add an object into the scene with a specific parent node, 
 	// don't worry about this unless you want to do hierarchical 
@@ -85,6 +121,10 @@ public:
 	// in which case they just represent transformations.  
 	SceneDagNode* addObject( SceneDagNode* parent, SceneObject* obj, 
 			Material* mat );
+
+
+	void addObject_tree( SceneDagNode* parent, 
+		SceneObject* obj, Material* mat, Matrix4x4 modelToWorld, Vector3D BB_max, Vector3D BB_min);
 
 	// Add a light source.
 	LightListNode* addLightSource( LightSource* light );
@@ -129,6 +169,10 @@ private:
     // Precompute the modelToWorld and worldToModel transformations for each
     // object in the scene.
     void computeTransforms( SceneDagNode* node );
+
+	void buildAABBtree( SceneDagNode* scene_node, AABB_node* tree_node );
+
+	void computeBB( SceneDagNode* node);
 
 
     // Width and height of the viewport.

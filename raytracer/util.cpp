@@ -322,6 +322,15 @@ Vector4D Matrix4x4::getColumn(int col) const {
 			m_data[12+col]);
 }
 
+void Matrix4x4::set_value(int pos, double value){
+	m_data[pos] = value;
+	return;
+}
+
+double Matrix4x4::get_value(int pos){
+	return m_data[pos];
+}
+
 Vector4D Matrix4x4::operator[](int row) const {
 	return getRow(row);
 }
