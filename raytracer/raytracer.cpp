@@ -334,6 +334,16 @@ Colour Raytracer::shadeRay( Ray3D& ray , int depth, int d_end, Colour col) {
 		// ray.col[0] = ray.col[0] / phong_count;
 		// ray.col[1] = ray.col[1] / phong_count;
 		// ray.col[2] = ray.col[2] / phong_count;
+		//if (depth == 1) {
+		//	if (ray.intersection.point[2] > -6.9) {
+		//		if (col[0] != 0 || col[1] != 0 || col[2] != 0){
+		//			if (ray.col[0] != 0 || ray.col[1] != 0 || ray.col[2] != 0) {
+		//				std::cout << "prev color" << 255 * col << "\n";
+		//				std::cout << "cur color" << 255 * ray.col << "\n";
+		//			}
+		//		}
+		//	}
+		//}
 
 		Vector3D ray_dir = ray.dir;
 		ray_dir.normalize();
@@ -344,7 +354,12 @@ Colour Raytracer::shadeRay( Ray3D& ray , int depth, int d_end, Colour col) {
 		
 		Ray3D ref_ray = Ray3D((ray.intersection.point + 0.0001 * ray_n), ref_dir);
 		//std::cout << "combine color" << col << "\n";
-        return shadeRay(ref_ray, depth+1, d_end, col + ray.col);
+		if (depth == 0) {
+			return shadeRay(ref_ray, depth + 1, d_end, col + ray.col);
+		}
+		else {
+			return shadeRay(ref_ray, depth + 1, d_end, col + 0.1 * ray.col);
+		}
     }
 	else {
 		//std::cout << "combine color" << col << "\n";
@@ -392,12 +407,20 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 
 			// TODO: Convert ray to world space and call 
 			// shadeRay(ray) to generate pixel colour. 	
-			
-			Vector3D RayDirection = Vector3D(imagePlane[0], imagePlane[1], imagePlane[2]);
-			Ray3D ray = Ray3D(viewToWorld*origin, viewToWorld*RayDirection);
 			Colour init_color = Colour(0, 0, 0);
-			int d_end = 1;
-			Colour col = shadeRay(ray, 0, d_end, init_color);
+			Colour col = Colour(0, 0, 0);
+			int SA_times = 2;
+			double bias = (1.0 / factor) / SA_times;
+			for (int k = 0; k < SA_times; k++) {
+				for (int l = 0; l < SA_times; l++) {
+					Vector3D RayDirection = Vector3D(imagePlane[0] + bias*k, imagePlane[1] + bias*l, imagePlane[2]);
+					Ray3D ray = Ray3D(viewToWorld*origin, viewToWorld*RayDirection);
+					int d_end = 2;
+					col = col + (1.0/std::pow((double)SA_times,2)) * shadeRay(ray, 0, d_end, init_color);
+				}
+			}
+
+			col.clamp();
 			//std::cout << "after" << col << "\n"; 
 			// if (col[0] >1 || col[1]>1 || col[2]>1){
 			// 	col = (1.0 / (double)d_end)*col;
