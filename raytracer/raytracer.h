@@ -40,7 +40,7 @@ struct SceneDagNode {
 		obj(obj), mat(mat), next(NULL), parent(NULL), child(NULL) {
 		}
 
-	SceneDagNode( SceneObject* obj, Material* mat, Matrix4x4 modelToWorld, Vector3D BB_max, Vector3D BB_min) : 
+	SceneDagNode( SceneObject* obj, Material* mat, Matrix4x4 modelToWorld, Point3D BB_max, Point3D BB_min) :
 		obj(obj), mat(mat), next(NULL), parent(NULL), child(NULL), modelToWorld(modelToWorld), BB_max(BB_max), BB_min(BB_min) {
 		}
 	
@@ -59,8 +59,8 @@ struct SceneDagNode {
 	Matrix4x4 invtrans;
 	Matrix4x4 modelToWorld;
 	Matrix4x4 worldToModel;
-	Vector3D BB_max = Vector3D(0,0,0);
-	Vector3D BB_min = Vector3D(0,0,0);
+	Point3D BB_max = Point3D(0,0,0);
+	Point3D BB_min = Point3D(0,0,0);
 	
 	// Internal structure of the tree, you shouldn't have to worry 
 	// about them.
@@ -85,8 +85,8 @@ struct AABB_node {
 	Matrix4x4 invtrans;
 	Matrix4x4 modelToWorld;
 	Matrix4x4 worldToModel;
-	Vector3D BB_max;
-	Vector3D BB_min;
+	Point3D BB_max;
+	Point3D BB_min;
 	
 	// Internal structure of the tree, you shouldn't have to worry 
 	// about them.
@@ -124,7 +124,7 @@ public:
 
 
 	void addObject_tree( SceneDagNode* parent, 
-		SceneObject* obj, Material* mat, Matrix4x4 modelToWorld, Vector3D BB_max, Vector3D BB_min);
+		SceneObject* obj, Material* mat, Matrix4x4 modelToWorld, Point3D BB_max, Point3D BB_min);
 
 	// Add a light source.
 	LightListNode* addLightSource( LightSource* light );

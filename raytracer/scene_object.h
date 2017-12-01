@@ -18,8 +18,8 @@ class SceneObject {
 public:
 	// Returns true if an intersection occured, false otherwise.
 	virtual bool intersect( Ray3D&, const Matrix4x4&, const Matrix4x4& ) = 0;
-	virtual Vector3D BBmin(const Matrix4x4& modelToWorld ) =0;
-	virtual Vector3D BBmax(const Matrix4x4& modelToWorld ) =0;
+	virtual Point3D BBmin(const Matrix4x4& modelToWorld ) =0;
+	virtual Point3D BBmax(const Matrix4x4& modelToWorld ) =0;
 };
 
 // Example primitive you can create, this is a unit square on 
@@ -29,8 +29,8 @@ public:
 	bool intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 			const Matrix4x4& modelToWorld );
 	
-	Vector3D BBmin(const Matrix4x4& modelToWorld );
-	Vector3D BBmax(const Matrix4x4& modelToWorld );
+	Point3D BBmin(const Matrix4x4& modelToWorld );
+	Point3D BBmax(const Matrix4x4& modelToWorld );
 };
 
 class UnitSphere : public SceneObject {
@@ -38,8 +38,8 @@ public:
 	bool intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 			const Matrix4x4& modelToWorld );
 
-	Vector3D BBmin(const Matrix4x4& modelToWorld );
-	Vector3D BBmax(const Matrix4x4& modelToWorld );
+	Point3D BBmin(const Matrix4x4& modelToWorld );
+	Point3D BBmax(const Matrix4x4& modelToWorld );
 };
 
 //add cube class for AABB bounding box support

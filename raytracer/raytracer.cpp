@@ -50,7 +50,7 @@ SceneDagNode* Raytracer::addObject( SceneDagNode* parent,
 }
 
 void Raytracer::addObject_tree( SceneDagNode* parent, 
-		SceneObject* obj, Material* mat, Matrix4x4 modelToWorld, Vector3D BB_max, Vector3D BB_min) {
+		SceneObject* obj, Material* mat, Matrix4x4 modelToWorld, Point3D BB_max, Point3D BB_min) {
 	SceneDagNode* node = new SceneDagNode( obj, mat, modelToWorld, BB_max, BB_min);
 	node->parent = parent;
 	node->next = NULL;
@@ -383,8 +383,8 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
         Vector3D up, double fov, std::string fileName ) {
     computeTransforms(_root);
 	computeBB(_root);
-	AABB_node tree_root = AABB_node();
-	buildAABBtree(_root, &tree_root);
+	AABB_node *tree_root =new AABB_node();
+	buildAABBtree(_root, tree_root);
     Matrix4x4 viewToWorld;
     _scrWidth = width;
     _scrHeight = height;
@@ -482,8 +482,14 @@ void Raytracer::buildAABBtree( SceneDagNode* node_list, AABB_node* tree_node)
 {
 	//assume all SceneDagNode has no first term, first term is node_list->next
 	//Case1: node_list has 1 item, no need to continue partition
-	SceneDagNode* child = node_list->child;
-	std::cout << "here1" << "\n";
+	SceneDagNode* child;
+	if (node_list->child != NULL) {
+		child = node_list->child;
+	}
+	else {
+		return;
+	}
+	//std::cout << "here1" << "\n";
 
 	if (child->next == NULL){
 		tree_node->scene_obj = child;
@@ -493,8 +499,8 @@ void Raytracer::buildAABBtree( SceneDagNode* node_list, AABB_node* tree_node)
 	//Cse2: node_list has several items, do BSP 
 	//assume can go through all nodes using node_list->next
 	//find current bounding box
-	Vector3D cur_min = Vector3D(999.0, 999.0, 999.0);
-	Vector3D cur_max = Vector3D(-999.0, -999.0, -999.0);
+	Point3D cur_min = Point3D(999.0, 999.0, 999.0);
+	Point3D cur_max = Point3D(-999.0, -999.0, -999.0);
 	SceneDagNode* temp_node = node_list->child;
 	while(temp_node != NULL){
 		cur_min[0] = fmin(temp_node->BB_min[0], cur_min[0]);
@@ -511,17 +517,17 @@ void Raytracer::buildAABBtree( SceneDagNode* node_list, AABB_node* tree_node)
 	//set current bounding box size 
 	tree_node->BB_max = cur_max;
 	tree_node->BB_min = cur_min;
-	std::cout << "max" << cur_max << "\n";
-	std::cout << "min" << cur_min << "\n";
+	//std::cout << "max" << cur_max << "\n";
+	//std::cout << "min" << cur_min << "\n";
 
 
 
 	//partition current bounding box and seperate objects according to the plain
 	//always split along x axis
 	//find normal of the plain, and a point on plain where the normal shoot out:
-	double delta_x = (cur_max[0] - cur_min[0])/2;
-	Vector3D normal_vec = Vector3D(-delta_x, 0, 0);
-	Point3D int_point = Point3D((cur_min[0]+delta_x) , cur_max[1], cur_max[2]);
+	double delta_z = (cur_max[2] - cur_min[2])/2;
+	Vector3D normal_vec = Vector3D(0, 0, -delta_z);
+	Point3D int_point = Point3D(cur_min[0], cur_max[1], ((cur_max[2]) - delta_z));
     SceneDagNode *left = new SceneDagNode();
 	SceneDagNode *right = new SceneDagNode();
 	//traverse through list of nodes and seperate into left and right
@@ -559,10 +565,12 @@ void Raytracer::buildAABBtree( SceneDagNode* node_list, AABB_node* tree_node)
 			// right->child = &o;
 			addObject_tree(right, current_node->obj, current_node->mat, current_node->modelToWorld, current_node->BB_max, current_node->BB_min);
 		}
+
 		current_node = current_node->next;
 	}
-	AABB_node* left_tree_node;
-	AABB_node* right_tree_node;
+
+	AABB_node* left_tree_node = new AABB_node();
+	AABB_node* right_tree_node = new AABB_node();
 	left_tree_node->parent = tree_node;
 	right_tree_node->parent = tree_node;
 

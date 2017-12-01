@@ -235,7 +235,7 @@ bool UnitCube::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	//return false;
 }
 
-Vector3D UnitSphere::BBmin(const Matrix4x4& modelToWorld){
+Point3D UnitSphere::BBmin(const Matrix4x4& modelToWorld){
 	Matrix4x4 s = Matrix4x4();
 	s.set_value(15, -1.0);
 	//s = [ 1  0  0  0 ]
@@ -249,7 +249,7 @@ Vector3D UnitSphere::BBmin(const Matrix4x4& modelToWorld){
 	// 			              [ r12 r22 r23 r24 ]
 	//    			          [ r13 r23 r33 r34 ]
 	//     			          [ r14 r24 r34 r44 ]
-	Vector3D minxyz = Vector3D();
+	Point3D minxyz = Point3D();
 	//z
 	minxyz[2] = (r.get_value(11) + sqrt(r.get_value(11)*r.get_value(11) - r.get_value(15)*r.get_value(10)))/ r.get_value(15);
 	//y
@@ -263,7 +263,7 @@ Vector3D UnitSphere::BBmin(const Matrix4x4& modelToWorld){
 	return minxyz;
 }
 
-Vector3D UnitSphere::BBmax(const Matrix4x4& modelToWorld){
+Point3D UnitSphere::BBmax(const Matrix4x4& modelToWorld){
 	Matrix4x4 s = Matrix4x4();
 	s.set_value(15, -1.0);
 	//s = [ 1  0  0  0 ]
@@ -277,7 +277,7 @@ Vector3D UnitSphere::BBmax(const Matrix4x4& modelToWorld){
 	// 			              [ r12 r22 r23 r24 ]
 	//    			          [ r13 r23 r33 r34 ]
 	//     			          [ r14 r24 r34 r44 ]
-	Vector3D maxxyz = Vector3D();
+	Point3D maxxyz = Point3D();
 	//z
 	maxxyz[2] = (r.get_value(11) - sqrt(r.get_value(11)*r.get_value(11) - r.get_value(15)*r.get_value(10)))/ r.get_value(15);
 	//y
@@ -293,13 +293,13 @@ Vector3D UnitSphere::BBmax(const Matrix4x4& modelToWorld){
 }
 
 
-Vector3D UnitSquare::BBmin(const Matrix4x4& modelToWorld){
-	Vector3D p1 = modelToWorld * Vector3D(-0.5, -0.5, 0);
-	Vector3D p2 = modelToWorld * Vector3D(-0.5, 0.5, 0);
-	Vector3D p3 = modelToWorld * Vector3D(0.5, -0.5, 0);
-	Vector3D p4 = modelToWorld * Vector3D(0.5, 0.5, 0);
+Point3D UnitSquare::BBmin(const Matrix4x4& modelToWorld){
+	Point3D p1 = modelToWorld * Point3D(-0.5, -0.5, 0);
+	Point3D p2 = modelToWorld * Point3D(-0.5, 0.5, 0);
+	Point3D p3 = modelToWorld * Point3D(0.5, -0.5, 0);
+	Point3D p4 = modelToWorld * Point3D(0.5, 0.5, 0);
 
-	Vector3D minxyz = Vector3D(0, 0, 0);
+	Point3D minxyz = Point3D(0, 0, 0);
 	//x
 	minxyz[0] = fmin(p1[0], fmin(p2[0], fmin(p3[0], p4[0])));
 	//y
@@ -312,17 +312,17 @@ Vector3D UnitSquare::BBmin(const Matrix4x4& modelToWorld){
 
 
 
-Vector3D UnitSquare::BBmax(const Matrix4x4& modelToWorld){
-	Vector3D p1 = modelToWorld * Vector3D(-0.5, -0.5, 0);
-	Vector3D p2 = modelToWorld * Vector3D(-0.5, 0.5, 0);
-	Vector3D p3 = modelToWorld * Vector3D(0.5, -0.5, 0);
-	Vector3D p4 = modelToWorld * Vector3D(0.5, 0.5, 0);
+Point3D UnitSquare::BBmax(const Matrix4x4& modelToWorld){
+	Point3D p1 = modelToWorld * Point3D(-0.5, -0.5, 0);
+	Point3D p2 = modelToWorld * Point3D(-0.5, 0.5, 0);
+	Point3D p3 = modelToWorld * Point3D(0.5, -0.5, 0);
+	Point3D p4 = modelToWorld * Point3D(0.5, 0.5, 0);
 	// std::cout<< "p1" << p1 << "\n";
 	// std::cout<< "p2" << p2 << "\n";
 	// std::cout<< "p3" << p3 << "\n";
 	// std::cout<< "p4" << p4 << "\n";
 
-	Vector3D maxxyz = Vector3D(0, 0, 0);
+	Point3D maxxyz = Point3D(0, 0, 0);
 	//x
 	maxxyz[0] = fmax(p1[0], fmax(p2[0], fmax(p3[0], p4[0])));
 	//y
