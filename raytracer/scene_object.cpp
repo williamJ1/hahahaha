@@ -162,13 +162,6 @@ bool UnitCube::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	// (-0.5, 0.5, 0), (-0.5, -0.5, 0), (0.5, -0.5, 0), and normal
 	// (0, 0, 1).
 	//
-	// Your goal here is to fill ray.intersection with correct values
-	// should an intersection occur.  This includes intersection.point, 
-	// intersection.normal, intersection.none, intersection.t_value.   
-	//
-	// HINT: Remember to first transform the ray into object space  
-	// to simplify the intersection test.
-	
 	//transform ray into object space
 	Point3D ray_origin = worldToModel * (ray.origin);
 	Vector3D ray_dir = worldToModel * (ray.dir);
@@ -333,3 +326,14 @@ Point3D UnitSquare::BBmax(const Matrix4x4& modelToWorld){
 	return maxxyz; 
 }
 
+Point3D UnitCube::BBmin(const Matrix4x4& modelToWorld){
+	Point3D minxyz = Point3D(0, 0, 0);
+	return minxyz;
+}
+
+
+
+Point3D UnitCube::BBmax(const Matrix4x4& modelToWorld){
+	Point3D maxxyz = Point3D(0, 0, 0);
+	return maxxyz; 
+}

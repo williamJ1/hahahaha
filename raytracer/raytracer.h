@@ -79,6 +79,7 @@ struct AABB_node {
 	}
 
 	SceneDagNode* scene_obj;
+	SceneObject* cube_obj;
 	// Each node maintains a transformation matrix, which maps the 
 	// geometry from object space to world space and the inverse.
 	Matrix4x4 trans;
@@ -87,6 +88,7 @@ struct AABB_node {
 	Matrix4x4 worldToModel;
 	Point3D BB_max;
 	Point3D BB_min;
+	
 	
 	// Internal structure of the tree, you shouldn't have to worry 
 	// about them.
@@ -161,6 +163,8 @@ private:
 	// Traversal code for the scene graph, the ray is transformed into 
 	// the object space of each node where intersection is performed.
 	void traverseScene( SceneDagNode* node, Ray3D& ray );
+	//add BSP support
+	void Raytracer::traverseScene_BSP( AABB_node* tree_root, Ray3D& ray );
 
 	// After intersection, calculate the colour of the ray by shading it
 	// with all light sources in the scene.

@@ -47,4 +47,8 @@ class UnitCube : public SceneObject {
 public:
 	bool intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 			const Matrix4x4& modelToWorld );
+			
+	Point3D BBmin(const Matrix4x4& modelToWorld );
+	Point3D BBmax(const Matrix4x4& modelToWorld );
+
 };

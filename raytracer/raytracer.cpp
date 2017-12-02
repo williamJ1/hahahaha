@@ -228,6 +228,23 @@ void Raytracer::traverseScene( SceneDagNode* node, Ray3D& ray ) {
 
 }
 
+void Raytracer::traverseScene_BSP( AABB_node* tree_root, Ray3D& ray ) {
+    SceneDagNode *childPtr;
+	Matrix4x4 BB_worldToModel = Matrix4x4();
+	Matrix4x4 BB_modelToWorld = Matrix4x4();
+
+
+	bool ray_intersect_BB = tree_root->cube_obj->intersect(ray, BB_worldToModel, BB_modelToWorld);
+	//check with current bounding box for intersection
+
+	//if intersect
+		//check if current tree node is leaf 
+		//if its leaf, calculate intersection
+		//else call traverseScene_BSP with left/right children
+
+	//else return
+}
+
 void Raytracer::computeShading( Ray3D& ray, int* phong_count) {
     LightListNode* curLight = _lightSource;
 	LightListNode* curLight_temp = _lightSource;
@@ -384,6 +401,7 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
     computeTransforms(_root);
 	computeBB(_root);
 	AABB_node *tree_root =new AABB_node();
+	tree_root->cube_obj = new UnitCube();
 	buildAABBtree(_root, tree_root);
     Matrix4x4 viewToWorld;
     _scrWidth = width;
@@ -394,7 +412,7 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
     viewToWorld = initInvViewMatrix(eye, view, up);
 
     // Construct a ray for each pixel.
-	double largest_color_value = 0.0;
+	// double largest_color_value = 0.0;
     for (int i = 0; i < _scrHeight; i++) {
         for (int j = 0; j < _scrWidth; j++) {
             // Sets up ray origin and direction in view space, 
@@ -409,13 +427,13 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 			// shadeRay(ray) to generate pixel colour. 	
 			Colour init_color = Colour(0, 0, 0);
 			Colour col = Colour(0, 0, 0);
-			int SA_times = 2;
+			int SA_times = 1;
 			double bias = (1.0 / factor) / SA_times;
 			for (int k = 0; k < SA_times; k++) {
 				for (int l = 0; l < SA_times; l++) {
 					Vector3D RayDirection = Vector3D(imagePlane[0] + bias*k, imagePlane[1] + bias*l, imagePlane[2]);
 					Ray3D ray = Ray3D(viewToWorld*origin, viewToWorld*RayDirection);
-					int d_end = 2;
+					int d_end = 1;
 					col = col + (1.0/std::pow((double)SA_times,2)) * shadeRay(ray, 0, d_end, init_color);
 				}
 			}
@@ -425,9 +443,9 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 			// if (col[0] >1 || col[1]>1 || col[2]>1){
 			// 	col = (1.0 / (double)d_end)*col;
 			// }
-			double current_max = fmax(col[0], col[1]);
-			current_max = fmax(current_max, col[2]);
-			largest_color_value = fmax(largest_color_value, current_max);
+			// double current_max = fmax(col[0], col[1]);
+			// current_max = fmax(current_max, col[2]);
+			// largest_color_value = fmax(largest_color_value, current_max);
 
 				
 			_rbuffer[i*width+j] = int(col[0]*255);
@@ -438,19 +456,6 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 		}
 	}
 
-	// std::cout<<"largest_color"<<largest_color_value<<"\n";
-	// if(largest_color_value > 1){
-	// 	double ratio = 1/largest_color_value;
-	// 	for (int i = 0; i < _scrHeight; i++) {
-	// 		for (int j = 0; j < _scrWidth; j++) {
-	// 		_rbuffer[i*width+j] = int(_rbuffer[i*width+j]*ratio);
-	// 		_gbuffer[i*width+j] = int(_gbuffer[i*width+j]*ratio);
-	// 		_bbuffer[i*width+j] = int(_bbuffer[i*width+j]*ratio);
-	// 		}
-	// 	}
-
-
-	// }
 
 
 
@@ -489,11 +494,10 @@ void Raytracer::buildAABBtree( SceneDagNode* node_list, AABB_node* tree_node)
 	else {
 		return;
 	}
-	//std::cout << "here1" << "\n";
 
 	if (child->next == NULL){
 		tree_node->scene_obj = child;
-		std::cout << "inhere3" << "\n";
+		// std::cout << "inhere3" << "\n";
 		return;
 	}
 	//Cse2: node_list has several items, do BSP 
@@ -517,10 +521,6 @@ void Raytracer::buildAABBtree( SceneDagNode* node_list, AABB_node* tree_node)
 	//set current bounding box size 
 	tree_node->BB_max = cur_max;
 	tree_node->BB_min = cur_min;
-	//std::cout << "max" << cur_max << "\n";
-	//std::cout << "min" << cur_min << "\n";
-
-
 
 	//partition current bounding box and seperate objects according to the plain
 	//always split along x axis
@@ -539,30 +539,10 @@ void Raytracer::buildAABBtree( SceneDagNode* node_list, AABB_node* tree_node)
 		Vector3D object_dir = object_center - int_point;
 		double cos_value = normal_vec.dot(object_dir);
 		if (cos_value <= 0){
-			// //SceneDagNode *current_node = temp_node;
-			// //add current node to left node_list end
-			// // SceneDagNode *left_temp = &left;
-			// // while (left_temp->next != NULL){
-			// // 	left_temp = left_temp->next;
-			// // }
-			// // left_temp->next = current_node;
-			// // left_temp->child = current_node;
-			// left->next = &o;
-			// left->child = &o;
 			addObject_tree(left, current_node->obj, current_node->mat, current_node->modelToWorld, current_node->BB_max, current_node->BB_min);
 			
 		}
 		else{
-			// //SceneDagNode *current_node = temp_node;
-			// //add current node to left node_list end
-			// // SceneDagNode *right_temp = &right;
-			// // while (right_temp->next != NULL){
-			// // 	right_temp = right_temp->next;
-			// // }
-			// // right_temp->next = current_node;
-			// // right_temp->child = current_node;
-			// right->next = &o;
-			// right->child = &o;
 			addObject_tree(right, current_node->obj, current_node->mat, current_node->modelToWorld, current_node->BB_max, current_node->BB_min);
 		}
 
@@ -573,6 +553,9 @@ void Raytracer::buildAABBtree( SceneDagNode* node_list, AABB_node* tree_node)
 	AABB_node* right_tree_node = new AABB_node();
 	left_tree_node->parent = tree_node;
 	right_tree_node->parent = tree_node;
+
+	left_tree_node->cube_obj = new UnitCube();
+	right_tree_node->cube_obj = new UnitCube();
 
 	tree_node->left = left_tree_node;
 	tree_node->right = right_tree_node;
