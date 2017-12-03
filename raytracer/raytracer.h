@@ -40,8 +40,8 @@ struct SceneDagNode {
 		obj(obj), mat(mat), next(NULL), parent(NULL), child(NULL) {
 		}
 
-	SceneDagNode( SceneObject* obj, Material* mat, Matrix4x4 modelToWorld, Point3D BB_max, Point3D BB_min) :
-		obj(obj), mat(mat), next(NULL), parent(NULL), child(NULL), modelToWorld(modelToWorld), BB_max(BB_max), BB_min(BB_min) {
+	SceneDagNode( SceneObject* obj, Material* mat, Matrix4x4 modelToWorld, Matrix4x4 worldToModel, Point3D BB_max, Point3D BB_min) :
+		obj(obj), mat(mat), next(NULL), parent(NULL), child(NULL), modelToWorld(modelToWorld), worldToModel(worldToModel), BB_max(BB_max), BB_min(BB_min) {
 		}
 	
 	~SceneDagNode() {
@@ -88,10 +88,7 @@ struct AABB_node {
 	Matrix4x4 worldToModel;
 	Point3D BB_max;
 	Point3D BB_min;
-	
-	
-	// Internal structure of the tree, you shouldn't have to worry 
-	// about them.
+
 	AABB_node* left;
 	AABB_node* right;
 	AABB_node* parent;
@@ -126,7 +123,7 @@ public:
 
 
 	void addObject_tree( SceneDagNode* parent, 
-		SceneObject* obj, Material* mat, Matrix4x4 modelToWorld, Point3D BB_max, Point3D BB_min);
+		SceneObject* obj, Material* mat, Matrix4x4 modelToWorld, Matrix4x4 worldToModel, Point3D BB_max, Point3D BB_min);
 
 	// Add a light source.
 	LightListNode* addLightSource( LightSource* light );
@@ -154,7 +151,7 @@ private:
 
 	// Return the colour of the ray after intersection and shading, call 
 	// this function recursively for reflection and refraction.  
-	Colour shadeRay( Ray3D& ray , int depth, int d_end,Colour colour); 
+	Colour shadeRay( Ray3D& ray , int depth, int d_end,Colour colour, AABB_node *tree_root);
 
 	// Constructs a view to world transformation matrix based on the
 	// camera parameters.
@@ -164,11 +161,13 @@ private:
 	// the object space of each node where intersection is performed.
 	void traverseScene( SceneDagNode* node, Ray3D& ray );
 	//add BSP support
-	void Raytracer::traverseScene_BSP( AABB_node* tree_root, Ray3D& ray );
+	void traverseScene_BSP( AABB_node* tree_node, Ray3D& ray );
 
+	bool rayBBIntersect(const Point3D& BB_max, const Point3D& BB_min, const Point3D& origin, const Point3D& destination);
+	bool lineClip(int axis, const Point3D& BB_max, const Point3D& BB_min, const Point3D& origin, const Point3D& destination, double& f_low, double&f_high);
 	// After intersection, calculate the colour of the ray by shading it
 	// with all light sources in the scene.
-    void computeShading( Ray3D& ray, int* count);
+    void computeShading( Ray3D& ray, int* count, AABB_node* tree_root);
 
     // Precompute the modelToWorld and worldToModel transformations for each
     // object in the scene.

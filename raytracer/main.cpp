@@ -18,8 +18,8 @@ int main(int argc, char* argv[])
 	// change this if you're just implementing part one of the 
 	// assignment.  
 	Raytracer raytracer;
-	 int width = 600;
-	 int height = 600;
+	 int width = 300;
+	 int height = 300;
 
 	//int width = 600;
 	//int height = 600;
@@ -65,13 +65,25 @@ int main(int argc, char* argv[])
 	SceneDagNode* sphere = raytracer.addObject(new UnitSphere(), &gold);
 	SceneDagNode* plane = raytracer.addObject(new UnitSquare(), &jade);
 
+	//SceneDagNode* sphere_2 = raytracer.addObject(new UnitSphere(), &jade);
+
+
 	// Apply some transformations to the unit square.
 	double factor1[3] = { 1.0, 2.0, 1.0 };
+	double factor3[3] = { 0.25, 0.25, 0.25 };
 	double factor2[3] = { 6.0, 6.0, 6.0 };
 	raytracer.translate(sphere, Vector3D(0, 0, -5));
 	raytracer.rotate(sphere, 'x', -45);
 	raytracer.rotate(sphere, 'z', 45);
 	raytracer.scale(sphere, Point3D(0, 0, 0), factor1);
+
+
+	/*raytracer.translate(sphere_2, Vector3D(1, 1, -2));
+	raytracer.rotate(sphere_2, 'x', -45);
+	raytracer.rotate(sphere_2, 'z', 45);
+	raytracer.scale(sphere_2, Point3D(0, 0, 0), factor3);*/
+
+
 
 	raytracer.translate(plane, Vector3D(0, 0, -7));
 	raytracer.rotate(plane, 'z', 45);

@@ -50,8 +50,8 @@ SceneDagNode* Raytracer::addObject( SceneDagNode* parent,
 }
 
 void Raytracer::addObject_tree( SceneDagNode* parent, 
-		SceneObject* obj, Material* mat, Matrix4x4 modelToWorld, Point3D BB_max, Point3D BB_min) {
-	SceneDagNode* node = new SceneDagNode( obj, mat, modelToWorld, BB_max, BB_min);
+		SceneObject* obj, Material* mat, Matrix4x4 modelToWorld, Matrix4x4 worldToModel, Point3D BB_max, Point3D BB_min) {
+	SceneDagNode* node = new SceneDagNode( obj, mat, modelToWorld, worldToModel, BB_max, BB_min);
 	node->parent = parent;
 	node->next = NULL;
 	node->child = NULL;
@@ -225,27 +225,56 @@ void Raytracer::traverseScene( SceneDagNode* node, Ray3D& ray ) {
         traverseScene(childPtr, ray);
         childPtr = childPtr->next;
     }
-
 }
 
-void Raytracer::traverseScene_BSP( AABB_node* tree_root, Ray3D& ray ) {
-    SceneDagNode *childPtr;
-	Matrix4x4 BB_worldToModel = Matrix4x4();
-	Matrix4x4 BB_modelToWorld = Matrix4x4();
+void Raytracer::traverseScene_BSP( AABB_node* tree_node, Ray3D& ray ) {
+	//Material gold(Colour(0.3, 0.3, 0.3), Colour(0.75164, 0.60648, 0.22648),
+	//	Colour(0.628281, 0.555802, 0.366065),
+	//	51.2);
+	//Material jade(Colour(0, 0, 0), Colour(0.54, 0.89, 0.63),
+	//	Colour(0.316228, 0.316228, 0.316228),
+	//	12.8);
 
-
-	bool ray_intersect_BB = tree_root->cube_obj->intersect(ray, BB_worldToModel, BB_modelToWorld);
+	bool ray_intersect_BB = rayBBIntersect(tree_node->BB_max, tree_node->BB_min, (ray.origin - 10*ray.dir), (ray.origin + 10*ray.dir));
+	//bool ray_intersect_BB = true;
 	//check with current bounding box for intersection
-
+	//bool ray_intersect_BB = tree_node->cube_obj->intersect(ray, BB_worldToModel, BB_modelToWorld);
 	//if intersect
+	//if its leaf, calculate intersection
+	//else call traverseScene_BSP with left/right children
+	if (ray_intersect_BB) {
 		//check if current tree node is leaf 
-		//if its leaf, calculate intersection
-		//else call traverseScene_BSP with left/right children
+		if (tree_node->left == NULL && tree_node->right == NULL) {
+				//is leaf, check for intersection with object
+			if (tree_node->scene_obj->obj->intersect(ray, tree_node->scene_obj->worldToModel, tree_node->scene_obj->modelToWorld)) {
+				ray.intersection.mat = tree_node->scene_obj->mat;
+				//std::cout << "leaf reached" << "\n";
+			}
+			return;
+		}
+		//right is not null
+		if (tree_node->right != NULL) {
+			//std::cout << "explore right" << "\n";
+			traverseScene_BSP(tree_node->right, ray);
+		}
 
-	//else return
+		//left is not null
+		if (tree_node->left != NULL) {
+			//std::cout << "explore left" << "\n";
+			traverseScene_BSP(tree_node->left, ray);
+		}
+
+	}
+	else {
+		//current BB does not intersect the ray, does not need to go any deeper
+		return;
+	}
+
+	//should not reach here
+	return;
 }
 
-void Raytracer::computeShading( Ray3D& ray, int* phong_count) {
+void Raytracer::computeShading( Ray3D& ray, int* phong_count, AABB_node* tree_root) {
     LightListNode* curLight = _lightSource;
 	LightListNode* curLight_temp = _lightSource;
 
@@ -269,7 +298,9 @@ void Raytracer::computeShading( Ray3D& ray, int* phong_count) {
 		Vector3D ray_dir = curLight->light->get_position() - ray.intersection.point;
 		ray_dir.normalize();
 		Ray3D shadow_ray = Ray3D((ray.intersection.point + 0.01 * ray.intersection.normal), ray_dir);
-		traverseScene(_root, shadow_ray);
+		//switchBSP
+		//traverseScene(_root, shadow_ray);
+		traverseScene_BSP(tree_root, shadow_ray);
 		//double t_light = (curLight->light->get_position() - ray.intersection.point)/ray_dir;
 		Colour temp = Colour(0, 0, 0);
 		if (shadow_ray.intersection.none){
@@ -326,16 +357,17 @@ void Raytracer::flushPixelBuffer( std::string file_name ) {
     delete _bbuffer;
 }
 
-Colour Raytracer::shadeRay( Ray3D& ray , int depth, int d_end, Colour col) {
+Colour Raytracer::shadeRay( Ray3D& ray , int depth, int d_end, Colour col, AABB_node *tree_root) {
 	if (depth >= d_end){
 		//std::cout << "combine color" << col << "\n";
 		return col;
 	}
-	//_root is scene graph
-    traverseScene(_root, ray); 
+	//switchBSP
+    //traverseScene(_root, ray); 
+	traverseScene_BSP(tree_root, ray);
+	//std::cout << "end traverse" << "\n";
     // Don't bother shading if the ray didn't hit 
     // anything.
-	//ray.col = Colour(0,0,0);
 	int phong_count = 0;
 
     if (!ray.intersection.none) {
@@ -346,7 +378,7 @@ Colour Raytracer::shadeRay( Ray3D& ray , int depth, int d_end, Colour col) {
 		// 	//traverseScene(_root, ray);
 		// 	//return Colour(0,0,0.9);
 		// }
-        computeShading(ray, &phong_count); 
+        computeShading(ray, &phong_count, tree_root); 
 		//std::cout << "count" << phong_count<<"\n";
 		// ray.col[0] = ray.col[0] / phong_count;
 		// ray.col[1] = ray.col[1] / phong_count;
@@ -372,10 +404,10 @@ Colour Raytracer::shadeRay( Ray3D& ray , int depth, int d_end, Colour col) {
 		Ray3D ref_ray = Ray3D((ray.intersection.point + 0.0001 * ray_n), ref_dir);
 		//std::cout << "combine color" << col << "\n";
 		if (depth == 0) {
-			return shadeRay(ref_ray, depth + 1, d_end, col + ray.col);
+			return shadeRay(ref_ray, depth + 1, d_end, col + ray.col, tree_root);
 		}
 		else {
-			return shadeRay(ref_ray, depth + 1, d_end, col + 0.1 * ray.col);
+			return shadeRay(ref_ray, depth + 1, d_end, col + 0.1 * ray.col, tree_root);
 		}
     }
 	else {
@@ -434,7 +466,7 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 					Vector3D RayDirection = Vector3D(imagePlane[0] + bias*k, imagePlane[1] + bias*l, imagePlane[2]);
 					Ray3D ray = Ray3D(viewToWorld*origin, viewToWorld*RayDirection);
 					int d_end = 1;
-					col = col + (1.0/std::pow((double)SA_times,2)) * shadeRay(ray, 0, d_end, init_color);
+					col = col + (1.0/std::pow((double)SA_times,2)) * shadeRay(ray, 0, d_end, init_color, tree_root);
 				}
 			}
 
@@ -495,11 +527,14 @@ void Raytracer::buildAABBtree( SceneDagNode* node_list, AABB_node* tree_node)
 		return;
 	}
 
+	//leaf case
 	if (child->next == NULL){
 		tree_node->scene_obj = child;
-		// std::cout << "inhere3" << "\n";
+		tree_node->BB_max = child->BB_max;
+		tree_node->BB_min = child->BB_min;
 		return;
 	}
+
 	//Cse2: node_list has several items, do BSP 
 	//assume can go through all nodes using node_list->next
 	//find current bounding box
@@ -539,11 +574,11 @@ void Raytracer::buildAABBtree( SceneDagNode* node_list, AABB_node* tree_node)
 		Vector3D object_dir = object_center - int_point;
 		double cos_value = normal_vec.dot(object_dir);
 		if (cos_value <= 0){
-			addObject_tree(left, current_node->obj, current_node->mat, current_node->modelToWorld, current_node->BB_max, current_node->BB_min);
+			addObject_tree(left, current_node->obj, current_node->mat, current_node->modelToWorld, current_node->worldToModel, current_node->BB_max, current_node->BB_min);
 			
 		}
 		else{
-			addObject_tree(right, current_node->obj, current_node->mat, current_node->modelToWorld, current_node->BB_max, current_node->BB_min);
+			addObject_tree(right, current_node->obj, current_node->mat, current_node->modelToWorld, current_node->worldToModel, current_node->BB_max, current_node->BB_min);
 		}
 
 		current_node = current_node->next;
@@ -565,4 +600,57 @@ void Raytracer::buildAABBtree( SceneDagNode* node_list, AABB_node* tree_node)
 
 	//should not reach here
 	return;
+}
+
+bool Raytracer::rayBBIntersect(const Point3D& BB_max, const Point3D& BB_min, const Point3D& origin, const Point3D& destination){
+	double f_low = 0;
+	double f_high = 1;
+
+	//check x axis
+	if (!lineClip(0, BB_max, BB_min, origin, destination, f_low, f_high)) {
+		return false;
+	}
+
+	//check y axis
+	if (!lineClip(1, BB_max, BB_min, origin, destination, f_low, f_high)) {
+		return false;
+	}
+
+	//check z axis
+	if (!lineClip(2, BB_max, BB_min, origin, destination, f_low, f_high)) {
+		return false;
+	}
+
+	//std::cout << "intersec" << "\n";
+	return true;
+}
+
+bool Raytracer::lineClip(int axis, const Point3D& BB_max, const Point3D& BB_min,  const Point3D& origin, const Point3D& destination, double& f_low, double&f_high){
+	double current_f_low, current_f_high;
+	//find the fraction in current axis
+	current_f_low = (BB_min[axis] - origin[axis]) / (destination[axis] - origin[axis]);
+	current_f_high = (BB_max[axis] - origin[axis]) / (destination[axis] - origin[axis]);
+
+	//verif:  low <= high
+	if (current_f_high < current_f_low) {
+		//swap
+		double temp = current_f_low;
+		current_f_low = current_f_high;
+		current_f_high = temp;
+	}
+
+	if (current_f_high < f_low)
+		return false;
+
+	if (current_f_low > f_high) 
+		return false;
+
+	//combine the f low/high with previous results
+	f_low = fmax(current_f_low, f_low);
+	f_high = fmin(current_f_high, f_high);
+
+	if (f_low > f_high)
+		return false;
+
+	return true;
 }
