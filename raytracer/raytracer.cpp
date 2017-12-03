@@ -235,7 +235,7 @@ void Raytracer::traverseScene_BSP( AABB_node* tree_node, Ray3D& ray ) {
 	//	Colour(0.316228, 0.316228, 0.316228),
 	//	12.8);
 
-	bool ray_intersect_BB = rayBBIntersect(tree_node->BB_max, tree_node->BB_min, (ray.origin - 10*ray.dir), (ray.origin + 10*ray.dir));
+	bool ray_intersect_BB = rayBBIntersect(tree_node->BB_max, tree_node->BB_min, (ray.origin - 1000*ray.dir), (ray.origin + 1000*ray.dir));
 	//bool ray_intersect_BB = true;
 	//check with current bounding box for intersection
 	//bool ray_intersect_BB = tree_node->cube_obj->intersect(ray, BB_worldToModel, BB_modelToWorld);
@@ -444,7 +444,6 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
     viewToWorld = initInvViewMatrix(eye, view, up);
 
     // Construct a ray for each pixel.
-	// double largest_color_value = 0.0;
     for (int i = 0; i < _scrHeight; i++) {
         for (int j = 0; j < _scrWidth; j++) {
             // Sets up ray origin and direction in view space, 
@@ -461,14 +460,64 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 			Colour col = Colour(0, 0, 0);
 			int SA_times = 1;
 			double bias = (1.0 / factor) / SA_times;
-			for (int k = 0; k < SA_times; k++) {
+			/*for (int k = 0; k < SA_times; k++) {
 				for (int l = 0; l < SA_times; l++) {
 					Vector3D RayDirection = Vector3D(imagePlane[0] + bias*k, imagePlane[1] + bias*l, imagePlane[2]);
 					Ray3D ray = Ray3D(viewToWorld*origin, viewToWorld*RayDirection);
 					int d_end = 1;
 					col = col + (1.0/std::pow((double)SA_times,2)) * shadeRay(ray, 0, d_end, init_color, tree_root);
 				}
+			}*/
+
+			//implement depth of field
+			//generate 10 random rays 
+			int d_end = 1;
+			Vector3D RayDirection = Vector3D(imagePlane[0], imagePlane[1], imagePlane[2]);
+			//RayDirection.normalize();
+			Vector3D rayDirection_norm = RayDirection;
+			rayDirection_norm.normalize();
+			Point3D pointAimed = origin + 6 * rayDirection_norm;
+
+			int num_ray_dof = 20;
+			for (int i = 0; i < num_ray_dof; i++) {
+				double x_rand, y_rand;
+				//generate random number:
+				if (i <= 5) {
+					x_rand = ((double)rand() / RAND_MAX)/4;
+					y_rand = ((double)rand() / RAND_MAX)/4;
+				}
+				else if (i <= 10){
+					x_rand = ((double)rand() / (RAND_MAX + 1))/4;
+					y_rand = ((double)rand() / (RAND_MAX + 1))/4;
+				}
+				else if (i <= 15) {
+					x_rand = ((double)rand() / (RAND_MAX)) / 4;
+					y_rand = ((double)rand() / (RAND_MAX + 1)) / 4;
+				}
+				else {
+					x_rand = ((double)rand() / (RAND_MAX + 1)) / 4;
+					y_rand = ((double)rand() / (RAND_MAX)) / 4;
+				}
+
+				Point3D new_origin = origin;
+				new_origin[0] += x_rand;
+				new_origin[1] += y_rand;
+				Vector3D new_RayDirection = pointAimed - new_origin;
+				new_RayDirection.normalize();
+				//Ray3D new_ray = Ray3D(viewToWorld*new_origin, viewToWorld*new_RayDirection);
+				Ray3D new_ray = Ray3D(viewToWorld*new_origin, viewToWorld*new_RayDirection);
+				col = col + shadeRay(new_ray, 0, d_end, init_color, tree_root);
 			}
+			col[0] = col[0] / num_ray_dof;
+			col[1] = col[1] / num_ray_dof;
+			col[2] = col[2] / num_ray_dof;
+
+			//render without depth of field
+			/*Ray3D new_ray = Ray3D(viewToWorld*origin, viewToWorld*RayDirection);
+			col = shadeRay(new_ray, 0, d_end, init_color, tree_root);*/
+
+
+
 
 			col.clamp();
 			//std::cout << "after" << col << "\n"; 

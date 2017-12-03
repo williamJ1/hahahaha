@@ -18,8 +18,8 @@ int main(int argc, char* argv[])
 	// change this if you're just implementing part one of the 
 	// assignment.  
 	Raytracer raytracer;
-	 int width = 300;
-	 int height = 300;
+	 int width = 1000;
+	 int height = 1000;
 
 	//int width = 600;
 	//int height = 600;
