@@ -131,10 +131,10 @@ Colour operator +(const Colour& u, const Colour& v);
 std::ostream& operator <<(std::ostream& o, const Colour& c); 
 
 struct Material {
-	Material( Colour ambient, Colour diffuse, Colour specular, double exp ) :
-		ambient(ambient), diffuse(diffuse), specular(specular), 
-		specular_exp(exp) {}
-	
+	Material( Colour ambient, Colour diffuse, Colour specular, double exp, double trans_percent, double re_index ) :
+		ambient(ambient), diffuse(diffuse), specular(specular),
+		specular_exp(exp), trans_percent(trans_percent), re_index(re_index){}
+		
 	// Ambient components for Phong shading.
 	Colour ambient; 
 	// Diffuse components for Phong shading.
@@ -143,6 +143,12 @@ struct Material {
 	Colour specular;
 	// Specular expoent.
 	double specular_exp;
+	
+	//transparent
+	double trans_percent;
+
+	//refraction index;
+	double re_index;
 };
 
 struct Intersection {

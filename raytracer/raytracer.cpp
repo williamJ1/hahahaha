@@ -255,7 +255,7 @@ void Raytracer::computeShading( Ray3D& ray, int* phong_count) {
 		traverseScene(_root, shadow_ray);
 		//double t_light = (curLight->light->get_position() - ray.intersection.point)/ray_dir;
 		Colour temp = Colour(0, 0, 0);
-		if (shadow_ray.intersection.none){
+		if (shadow_ray.intersection.none || shadow_ray.intersection.mat->trans_percent>0){
 			//TODO:check if the object is between light and start point
 			temp = ray.col;
 			curLight->light->shade(ray);
@@ -322,47 +322,80 @@ Colour Raytracer::shadeRay( Ray3D& ray , int depth, int d_end, Colour col) {
 	int phong_count = 0;
 
     if (!ray.intersection.none) {
-		// if (depth == 1) {
-		// 	//std::cout << "wrong" << "\n";
-		// 	//std::cout << "ray_origin" << ray.origin << "\n";
-		// 	//std::cout << "ray direction" << ray.dir << "\n";
-		// 	//traverseScene(_root, ray);
-		// 	//return Colour(0,0,0.9);
-		// }
-        computeShading(ray, &phong_count); 
-		//std::cout << "count" << phong_count<<"\n";
-		// ray.col[0] = ray.col[0] / phong_count;
-		// ray.col[1] = ray.col[1] / phong_count;
-		// ray.col[2] = ray.col[2] / phong_count;
-		//if (depth == 1) {
-		//	if (ray.intersection.point[2] > -6.9) {
-		//		if (col[0] != 0 || col[1] != 0 || col[2] != 0){
-		//			if (ray.col[0] != 0 || ray.col[1] != 0 || ray.col[2] != 0) {
-		//				std::cout << "prev color" << 255 * col << "\n";
-		//				std::cout << "cur color" << 255 * ray.col << "\n";
-		//			}
-		//		}
-		//	}
-		//}
 
+		// 	//std::cout << "ray direction" << ray.dir << "\n";
+		//std::cout << "cur color" << 255 * ray.col << "\n";
+        computeShading(ray, &phong_count); 
 		Vector3D ray_dir = ray.dir;
 		ray_dir.normalize();
 		Vector3D ray_n = ray.intersection.normal;
 		ray_n.normalize();
-		Vector3D ref_dir = ray_dir - 2 * (ray_dir.dot(ray_n))*ray_n;
-		ref_dir.normalize();
 		
-		Ray3D ref_ray = Ray3D((ray.intersection.point + 0.0001 * ray_n), ref_dir);
-		//std::cout << "combine color" << col << "\n";
-		if (depth == 0) {
-			return shadeRay(ref_ray, depth + 1, d_end, col + ray.col);
-		}
+		if (ray.intersection.mat->trans_percent == 0) {
+			return ray.col;
+			if (depth > 2) {
+				//std::cout << "refracted on to plane" << "\n";
+				//std::cout << "refracted color" << 255*ray.col <<"\n";
+			}
+			//calculate reflection ray
+			Vector3D refl_dir = ray_dir - 2 * (ray_dir.dot(ray_n))*ray_n;
+			refl_dir.normalize();
+		
+			Ray3D refl_ray = Ray3D((ray.intersection.point + 0.0001 * ray_n), refl_dir);
+			//std::cout << "combine color" << col << "\n";
+			if (depth == 0) {
+				return shadeRay(refl_ray, depth + 1, d_end, col + ray.col);
+			}
+			else {
+				return shadeRay(refl_ray, depth + 1, d_end, col + ray.col);
+			}
+		}//end of reflection
+
 		else {
-			return shadeRay(ref_ray, depth + 1, d_end, col + 0.1 * ray.col);
-		}
-    }
+			//calculate refraction ray
+			double n1 = 1.0;
+			double n2 = 1.0;
+			double cosI = ray_dir.dot(ray_n);
+
+			if (cosI > 0) {
+				n1 = ray.intersection.mat->re_index;
+				n2 = 1.0;
+				ray_n = -ray_n;
+			}
+			else {
+
+				n2 = ray.intersection.mat->re_index;
+				n1 = 1.0;
+				cosI = -cosI;
+			}
+			
+			float cosT = 1.0 - (n1 / n2)*(n1 / n2)*(1.0 - cosI*cosI);
+			if (cosT < 0.0) {
+				//total internal reflection
+				//std::cout << "internal reflection not handled" << "\n";
+				Vector3D refl_dir = ray_dir - 2 * (ray_dir.dot(ray_n))*ray_n;
+				Ray3D refl_ray = Ray3D((ray.intersection.point + 0.0001 * ray_n), refl_dir);
+				return shadeRay(refl_ray, depth + 1, d_end, col);
+			}
+			cosT = std::sqrt(cosT);
+			Vector3D refr_dir = (n1 / n2)*ray_dir +  ((n1 / n2) * cosI - cosT)*ray_n;
+			refr_dir.normalize();
+			Ray3D refr_ray = Ray3D((ray.intersection.point - 0.01 * ray_n), refr_dir);
+			if (depth == 1) {
+				//std::cout << "ray direction" << refr_dir << "\n";
+				//std::cout << "ray normal" << ray_n << "\n";
+				//std::cout << "int point" << ray.intersection.point << "\n";
+				//traverseScene(_root, refr_ray);
+				//std::cout << "int point 2" << refr_ray.intersection.point << "\n";
+			}
+
+			return shadeRay(refr_ray, depth + 1, d_end, col);
+
+		}//end of refraction
+    }//end of intersection exists
 	else {
 		//std::cout << "combine color" << col << "\n";
+		//no intersection
 		return col;
 	}
 
@@ -382,9 +415,9 @@ Colour Raytracer::shadeRay( Ray3D& ray , int depth, int d_end, Colour col) {
 void Raytracer::render( int width, int height, Point3D eye, Vector3D view, 
         Vector3D up, double fov, std::string fileName ) {
     computeTransforms(_root);
-	computeBB(_root);
-	AABB_node *tree_root =new AABB_node();
-	buildAABBtree(_root, tree_root);
+	//computeBB(_root);
+	//AABB_node *tree_root =new AABB_node();
+	//buildAABBtree(_root, tree_root);
     Matrix4x4 viewToWorld;
     _scrWidth = width;
     _scrHeight = height;
@@ -409,13 +442,13 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 			// shadeRay(ray) to generate pixel colour. 	
 			Colour init_color = Colour(0, 0, 0);
 			Colour col = Colour(0, 0, 0);
-			int SA_times = 2;
+			int SA_times = 1;
 			double bias = (1.0 / factor) / SA_times;
 			for (int k = 0; k < SA_times; k++) {
 				for (int l = 0; l < SA_times; l++) {
 					Vector3D RayDirection = Vector3D(imagePlane[0] + bias*k, imagePlane[1] + bias*l, imagePlane[2]);
 					Ray3D ray = Ray3D(viewToWorld*origin, viewToWorld*RayDirection);
-					int d_end = 2;
+					int d_end = 10;
 					col = col + (1.0/std::pow((double)SA_times,2)) * shadeRay(ray, 0, d_end, init_color);
 				}
 			}
