@@ -19,27 +19,28 @@ void PointLight::shade( Ray3D& ray ) {
 		Vector3D nor = ray.intersection.normal;
 		nor.normalize();
 
+		int witdth = 256;
+		int height = 256;
+		//double u = 0.5 + atan2(nor[1], nor[0]) / (2.0 * 3.141592653589793);
+		//double v = 0.5 - acos(nor[2]) / 3.141592653589793;
+		double u = atan2(nor[1], nor[0]) / (2.0*3.141592653589793) + 0.5;
+		double v = nor[2] * 0.5 + 0.5;
 
-		double u = 0.5 + atan2(nor[2], nor[0]) / (2 * 3.141592653589793);
-		double v = 0.5 - asin(nor[1]) / 3.141592653589793;
+		int i = (int)(u * witdth);//256 is image width
+		int j = (int)(v * height);
 
-		int i = (int)(u * 256);//105 is image width
-		int j = (int)(v * 256);
 		unsigned int r;
 		unsigned int g;
 		unsigned int b;
-		//std::cout << (int)texture[50] << (int)texture[51] << (int)texture[52];
-		//std::cout << i << " " << j << "\n";
-		r = texture[j * 256 + i];
-		g = texture[j * 256 + i + 1];
-		b = texture[j * 256 + i + 2];
-		//std::cout << r << " " << g << " " << b << "\n";
 
-		//for (int i = 0; i < 256; i++) {
-		//	for (int j = 0; j < 256; j++) {
-		//		std::cout << (int)texture[j * 256 + i] << " " << (int)texture[j * 256 + i + 1] << " " << (int)texture[j * 256 + i + 2] << "\n";
-		//	}
-		//}
+		if ((i * 150 + j) % 3 != 0){
+			i = i - (i * 150 + j) % 3;
+		}
+
+		r = texture[j * witdth *3 + i*3];
+		g = texture[j * witdth *3 + i*3 + 1];
+		b = texture[j * witdth *3 + i*3 + 2];
+
 		double rf = r / 255.0;
 		double gf = g / 255.0;
 		double bf = b / 255.0;

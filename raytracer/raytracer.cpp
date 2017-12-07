@@ -478,43 +478,43 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 			rayDirection_norm.normalize();
 			Point3D pointAimed = origin + 6 * rayDirection_norm;
 
-			int num_ray_dof = 20;
-			for (int i = 0; i < num_ray_dof; i++) {
-				double x_rand, y_rand;
-				//generate random number:
-				if (i <= 5) {
-					x_rand = ((double)rand() / RAND_MAX)/4;
-					y_rand = ((double)rand() / RAND_MAX)/4;
-				}
-				else if (i <= 10){
-					x_rand = ((double)rand() / (RAND_MAX + 1))/4;
-					y_rand = ((double)rand() / (RAND_MAX + 1))/4;
-				}
-				else if (i <= 15) {
-					x_rand = ((double)rand() / (RAND_MAX)) / 4;
-					y_rand = ((double)rand() / (RAND_MAX + 1)) / 4;
-				}
-				else {
-					x_rand = ((double)rand() / (RAND_MAX + 1)) / 4;
-					y_rand = ((double)rand() / (RAND_MAX)) / 4;
-				}
+			//int num_ray_dof = 1;
+			//for (int i = 0; i < num_ray_dof; i++) {
+			//	double x_rand, y_rand;
+			//	//generate random number:
+			//	if (i <= 5) {
+			//		x_rand = ((double)rand() / RAND_MAX)/4;
+			//		y_rand = ((double)rand() / RAND_MAX)/4;
+			//	}
+			//	else if (i <= 10){
+			//		x_rand = ((double)rand() / (RAND_MAX + 1))/4;
+			//		y_rand = ((double)rand() / (RAND_MAX + 1))/4;
+			//	}
+			//	else if (i <= 15) {
+			//		x_rand = ((double)rand() / (RAND_MAX)) / 4;
+			//		y_rand = ((double)rand() / (RAND_MAX + 1)) / 4;
+			//	}
+			//	else {
+			//		x_rand = ((double)rand() / (RAND_MAX + 1)) / 4;
+			//		y_rand = ((double)rand() / (RAND_MAX)) / 4;
+			//	}
 
-				Point3D new_origin = origin;
-				new_origin[0] += x_rand;
-				new_origin[1] += y_rand;
-				Vector3D new_RayDirection = pointAimed - new_origin;
-				new_RayDirection.normalize();
-				//Ray3D new_ray = Ray3D(viewToWorld*new_origin, viewToWorld*new_RayDirection);
-				Ray3D new_ray = Ray3D(viewToWorld*new_origin, viewToWorld*new_RayDirection);
-				col = col + shadeRay(new_ray, 0, d_end, init_color, tree_root);
-			}
-			col[0] = col[0] / num_ray_dof;
-			col[1] = col[1] / num_ray_dof;
-			col[2] = col[2] / num_ray_dof;
+			//	Point3D new_origin = origin;
+			//	new_origin[0] += x_rand;
+			//	new_origin[1] += y_rand;
+			//	Vector3D new_RayDirection = pointAimed - new_origin;
+			//	new_RayDirection.normalize();
+			//	//Ray3D new_ray = Ray3D(viewToWorld*new_origin, viewToWorld*new_RayDirection);
+			//	Ray3D new_ray = Ray3D(viewToWorld*new_origin, viewToWorld*new_RayDirection);
+			//	col = col + shadeRay(new_ray, 0, d_end, init_color, tree_root);
+			//}
+			//col[0] = col[0] / num_ray_dof;
+			//col[1] = col[1] / num_ray_dof;
+			//col[2] = col[2] / num_ray_dof;
 
 			//render without depth of field
-			/*Ray3D new_ray = Ray3D(viewToWorld*origin, viewToWorld*RayDirection);
-			col = shadeRay(new_ray, 0, d_end, init_color, tree_root);*/
+			Ray3D new_ray = Ray3D(viewToWorld*origin, viewToWorld*RayDirection);
+			col = shadeRay(new_ray, 0, d_end, init_color, tree_root);
 
 
 

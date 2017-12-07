@@ -87,8 +87,8 @@ int main(int argc, char* argv[])
 	// change this if you're just implementing part one of the 
 	// assignment.  
 	Raytracer raytracer;
-	 int width = 1000;
-	 int height = 1000;
+	 int width = 1920;
+	 int height = 1080;
 
 	//int width = 600;
 	//int height = 600;
@@ -144,13 +144,13 @@ int main(int argc, char* argv[])
 
 
 	// Apply some transformations to the unit square.
-	double factor1[3] = { 1.0, 1.0, 1.0 };
+	//double factor1[3] = { 0.5, 0.5, 0.5 };
 	double factor3[3] = { 0.25, 0.25, 0.25 };
 	double factor2[3] = { 6.0, 6.0, 6.0 };
 	raytracer.translate(sphere, Vector3D(0, 0, -5));
-	raytracer.rotate(sphere, 'x', -45);
-	raytracer.rotate(sphere, 'z', 45);
-	raytracer.scale(sphere, Point3D(0, 0, 0), factor1);
+	//raytracer.rotate(sphere, 'x', -45);
+	//raytracer.rotate(sphere, 'z', 45);
+	//raytracer.scale(sphere, Point3D(0, 0, 0), factor1);
 
 
 	/*raytracer.translate(sphere_2, Vector3D(1, 1, -2));
