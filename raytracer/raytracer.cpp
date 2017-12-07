@@ -299,7 +299,9 @@ void Raytracer::computeShading( Ray3D& ray, int* phong_count, AABB_node* tree_ro
 			Vector3D ray_dir = curLight->light->get_position() - ray.intersection.point;
 			ray_dir.normalize();
 			Ray3D shadow_ray = Ray3D((ray.intersection.point + 0.01 * ray.intersection.normal), ray_dir);
-			traverseScene(_root, shadow_ray);
+			//switchBSP
+			//traverseScene(_root, shadow_ray);
+			traverseScene_BSP(tree_root, shadow_ray);
 			//double t_light = (curLight->light->get_position() - ray.intersection.point)/ray_dir;
 			Colour temp = Colour(0, 0, 0);
 			if (shadow_ray.intersection.none){
@@ -330,7 +332,9 @@ void Raytracer::computeShading( Ray3D& ray, int* phong_count, AABB_node* tree_ro
 				Vector3D ray_dir = light_pos - ray.intersection.point;
 				ray_dir.normalize();
 				Ray3D shadow_ray = Ray3D((ray.intersection.point + 0.01 * ray.intersection.normal), ray_dir);
-				traverseScene(_root, shadow_ray);
+				//switchBSP
+				//traverseScene(_root, shadow_ray);
+				traverseScene_BSP(tree_root, shadow_ray);
 				//double t_light = (curLight->light->get_position() - ray.intersection.point)/ray_dir;
 				Colour temp = Colour(0, 0, 0);
 				if (shadow_ray.intersection.none) {
@@ -504,7 +508,7 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 
 			//implement depth of field
 			//generate 10 random rays 
-			int d_end = 1;
+			int d_end = 2;
 			Vector3D RayDirection = Vector3D(imagePlane[0], imagePlane[1], imagePlane[2]);
 			//RayDirection.normalize();
 			Vector3D rayDirection_norm = RayDirection;
