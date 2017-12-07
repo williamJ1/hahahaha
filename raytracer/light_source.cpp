@@ -57,22 +57,29 @@ Colour CalculatePhong(Ray3D& ray, Point3D& lightPos, Colour& ambient) {
 void PointLight::shade(Ray3D& ray) {
 	if (ray.intersection.mat->text_array != NULL) {
 		unsigned char* texture = ray.intersection.mat->text_array;
-		//normal of intersection point and sphere
+
 		Vector3D nor = ray.intersection.normal;
 		nor.normalize();
 
-		double u = 0.5 + atan2(nor[2], nor[0]) / (2 * 3.141592653589793);
-		double v = 0.5 - asin(nor[1]) / 3.141592653589793;
+		int witdth = 256;
+		int height = 256;
+		double u = atan2(nor[1], nor[0]) / (2.0*3.141592653589793) + 0.5;
+		double v = nor[2] * 0.5 + 0.5;
 
-		int i = (int)(u * 256);//105 is image width
-		int j = (int)(v * 256);
+		int i = (int)(u * witdth);
+		int j = (int)(v * height);
+
 		unsigned int r;
 		unsigned int g;
 		unsigned int b;
 
-		r = texture[j * 256 + i];
-		g = texture[j * 256 + i + 1];
-		b = texture[j * 256 + i + 2];
+		if ((i * 150 + j) % 3 != 0) {
+			i = i - (i * 150 + j) % 3;
+		}
+
+		r = texture[j * witdth * 3 + i * 3];
+		g = texture[j * witdth * 3 + i * 3 + 1];
+		b = texture[j * witdth * 3 + i * 3 + 2];
 
 		double rf = r / 255.0;
 		double gf = g / 255.0;

@@ -87,8 +87,8 @@ int main(int argc, char* argv[])
 	// change this if you're just implementing part one of the 
 	// assignment.  
 	Raytracer raytracer;
-	 int width = 1920;
-	 int height = 1080;
+	 int width = 600;
+	 int height = 600;
 
 	//int width = 600;
 	//int height = 600;
@@ -123,11 +123,11 @@ int main(int argc, char* argv[])
 		12.8, NULL);
 	// Defines a point light source.
 
-	//raytracer.addLightSource(new PointLight(Point3D(0, 0, 5),
-	//	Colour(0.9, 0.9, 0.9)));
-
-	raytracer.addLightSource(new AreaLight(Point3D(-1, -1, 5), 2.0,
+	raytracer.addLightSource(new PointLight(Point3D(0, 0, 5),
 		Colour(0.9, 0.9, 0.9)));
+
+	//raytracer.addLightSource(new AreaLight(Point3D(-1, -1, 5), 2.0,
+	//	Colour(0.9, 0.9, 0.9)));
 
 	//raytracer.addLightSource(new PointLight(Point3D(0, 12, 5),
 	//	Colour(0.9, 0.9, 0.9)));
