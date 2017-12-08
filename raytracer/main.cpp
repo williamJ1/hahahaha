@@ -9,6 +9,9 @@ CSC418, SPRING 2005
 
 #include "raytracer.h"
 #include <cstdlib>
+#include <iostream>
+#include <chrono>
+#include <ctime>
 
 int main(int argc, char* argv[])
 {
@@ -17,12 +20,16 @@ int main(int argc, char* argv[])
 	// scene and renders it from two different view points, DO NOT
 	// change this if you're just implementing part one of the 
 	// assignment.  
-	Raytracer raytracer;
-	 int width = 1000;
-	 int height = 1000;
 
-	//int width = 600;
-	//int height = 600;
+	auto start = std::chrono::system_clock::now();
+	std::cout << "started";
+
+	Raytracer raytracer;
+	 int width = 1920;
+	 int height = 1080;
+
+	/*int width = 600;
+	int height = 600;*/
 
 	if (argc == 3) {
 		width = atoi(argv[1]);
@@ -43,16 +50,30 @@ int main(int argc, char* argv[])
 		Colour(0.316228, 0.316228, 0.316228),
 		12.8);
 
+	Material orange(Colour(0, 0, 0), Colour(1.0, 0.6, 0.0),
+		Colour(0.316228, 0.316228, 0.316228),
+		30.0);
+
+	Material yellow(Colour(0, 0, 0), Colour(0.0, 1.0, 1.0),
+		Colour(0.316228, 0.316228, 0.316228),
+		30.0);
+
+	Material blue(Colour(0, 0, 0), Colour(0.0, 0.0, 1.0),
+		Colour(0.316228, 0.316228, 0.316228),
+		30.0);
+
+
+
 	// Defines a point light source.
 
 	raytracer.addLightSource(new PointLight(Point3D(0, 0, 5),
 		Colour(0.9, 0.9, 0.9)));
 
-	raytracer.addLightSource(new PointLight(Point3D(0, 12, 5),
+	/*raytracer.addLightSource(new PointLight(Point3D(0, 12, 5),
 		Colour(0.9, 0.9, 0.9)));
-
-	raytracer.addLightSource(new PointLight(Point3D(-20, 15, 5),
-		Colour(0.9, 0.9, 0.9)));
+*/
+	/*raytracer.addLightSource(new PointLight(Point3D(-20, 15, 5),
+		Colour(0.9, 0.9, 0.9)));*/
 
 	// raytracer.addLightSource(new PointLight(Point3D(0, -12, 5),
 	// 	Colour(0.9, 0.9, 0.9)));	
@@ -65,12 +86,13 @@ int main(int argc, char* argv[])
 	SceneDagNode* sphere = raytracer.addObject(new UnitSphere(), &gold);
 	SceneDagNode* plane = raytracer.addObject(new UnitSquare(), &jade);
 
-	//SceneDagNode* sphere_2 = raytracer.addObject(new UnitSphere(), &jade);
+	//SceneDagNode* sphere_2 = raytracer.addObject(new UnitSphere(), &blue);
+	//SceneDagNode* sphere_3 = raytracer.addObject(new UnitSphere(), &yellow);
 
 
 	// Apply some transformations to the unit square.
 	double factor1[3] = { 1.0, 2.0, 1.0 };
-	double factor3[3] = { 0.25, 0.25, 0.25 };
+	double factor3[3] = { 0.7, 0.7, 0.7 };
 	double factor2[3] = { 6.0, 6.0, 6.0 };
 	raytracer.translate(sphere, Vector3D(0, 0, -5));
 	raytracer.rotate(sphere, 'x', -45);
@@ -78,12 +100,15 @@ int main(int argc, char* argv[])
 	raytracer.scale(sphere, Point3D(0, 0, 0), factor1);
 
 
-	/*raytracer.translate(sphere_2, Vector3D(1, 1, -2));
-	raytracer.rotate(sphere_2, 'x', -45);
-	raytracer.rotate(sphere_2, 'z', 45);
-	raytracer.scale(sphere_2, Point3D(0, 0, 0), factor3);*/
+	//raytracer.translate(sphere_2, Vector3D(-1, -1, -3));
+	//raytracer.rotate(sphere_2, 'x', -45);
+	//raytracer.rotate(sphere_2, 'z', 45);
+	//raytracer.scale(sphere_2, Point3D(0, 0, 0), factor3);
 
-
+	//raytracer.translate(sphere_3, Vector3D(1, 2, -7));
+	//raytracer.rotate(sphere_3, 'x', -45);
+	//raytracer.rotate(sphere_3, 'z', 45);
+	//raytracer.scale(sphere_3, Point3D(0, 0, 0), factor3);
 
 	raytracer.translate(plane, Vector3D(0, 0, -7));
 	raytracer.rotate(plane, 'z', 45);
@@ -97,6 +122,11 @@ int main(int argc, char* argv[])
 	Point3D eye2(4, 2, 1);
 	Vector3D view2(-4, -2, -6);
 	raytracer.render(width, height, eye2, view2, up, fov, "view2.bmp");
+	auto end = std::chrono::system_clock::now();
+	std::chrono::duration<double> elapsed_seconds = end - start;
+	std::time_t end_time = std::chrono::system_clock::to_time_t(end);
 
-	return 0;
+	std::cout << "finished computation at " << std::ctime(&end_time)<< "elapsed time: " << elapsed_seconds.count() << "s\n";
+	
+ 	return 0;
 }

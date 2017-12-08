@@ -299,16 +299,17 @@ void Raytracer::computeShading( Ray3D& ray, int* phong_count, AABB_node* tree_ro
 		ray_dir.normalize();
 		Ray3D shadow_ray = Ray3D((ray.intersection.point + 0.01 * ray.intersection.normal), ray_dir);
 		//switchBSP
-		//traverseScene(_root, shadow_ray);
-		traverseScene_BSP(tree_root, shadow_ray);
+		traverseScene(_root, shadow_ray);
+		//traverseScene_BSP(tree_root, shadow_ray);
 		//double t_light = (curLight->light->get_position() - ray.intersection.point)/ray_dir;
 		Colour temp = Colour(0, 0, 0);
-		if (shadow_ray.intersection.none){
+		//if (shadow_ray.intersection.none){
+		if (true) {
 			//TODO:check if the object is between light and start point
 			temp = ray.col;
 			curLight->light->shade(ray);
 			*phong_count = *phong_count + 1;
-			ray.col = light_ratio*ray.col + (1-light_ratio)*temp;
+			//ray.col = light_ratio*ray.col + (1-light_ratio)*temp;
 			//ray.col = 0.6*ray.col + 0.4*temp;
 			//std::cout << ray.col << "\n";
 		}
@@ -363,8 +364,8 @@ Colour Raytracer::shadeRay( Ray3D& ray , int depth, int d_end, Colour col, AABB_
 		return col;
 	}
 	//switchBSP
-    //traverseScene(_root, ray); 
-	traverseScene_BSP(tree_root, ray);
+    traverseScene(_root, ray); 
+	//traverseScene_BSP(tree_root, ray);
 	//std::cout << "end traverse" << "\n";
     // Don't bother shading if the ray didn't hit 
     // anything.
@@ -476,45 +477,45 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 			//RayDirection.normalize();
 			Vector3D rayDirection_norm = RayDirection;
 			rayDirection_norm.normalize();
-			Point3D pointAimed = origin + 6 * rayDirection_norm;
+			Point3D pointAimed = origin + 7 * rayDirection_norm;
 
-			int num_ray_dof = 20;
-			for (int i = 0; i < num_ray_dof; i++) {
-				double x_rand, y_rand;
-				//generate random number:
-				if (i <= 5) {
-					x_rand = ((double)rand() / RAND_MAX)/4;
-					y_rand = ((double)rand() / RAND_MAX)/4;
-				}
-				else if (i <= 10){
-					x_rand = ((double)rand() / (RAND_MAX + 1))/4;
-					y_rand = ((double)rand() / (RAND_MAX + 1))/4;
-				}
-				else if (i <= 15) {
-					x_rand = ((double)rand() / (RAND_MAX)) / 4;
-					y_rand = ((double)rand() / (RAND_MAX + 1)) / 4;
-				}
-				else {
-					x_rand = ((double)rand() / (RAND_MAX + 1)) / 4;
-					y_rand = ((double)rand() / (RAND_MAX)) / 4;
-				}
+			//int num_ray_dof = 40;
+			//for (int i = 0; i < num_ray_dof; i++) {
+			//	double x_rand, y_rand;
+			//	//generate random number:
+			//	if (i <= 10) {
+			//		x_rand = ((double)rand() / RAND_MAX)/4;
+			//		y_rand = ((double)rand() / RAND_MAX)/4;
+			//	}
+			//	else if (i <= 20){
+			//		x_rand = ((double)rand() / (RAND_MAX + 1))/4;
+			//		y_rand = ((double)rand() / (RAND_MAX + 1))/4;
+			//	}
+			//	else if (i <= 30) {
+			//		x_rand = ((double)rand() / (RAND_MAX)) / 4;
+			//		y_rand = ((double)rand() / (RAND_MAX + 1)) / 4;
+			//	}
+			//	else {
+			//		x_rand = ((double)rand() / (RAND_MAX + 1)) / 4;
+			//		y_rand = ((double)rand() / (RAND_MAX)) / 4;
+			//	}
 
-				Point3D new_origin = origin;
-				new_origin[0] += x_rand;
-				new_origin[1] += y_rand;
-				Vector3D new_RayDirection = pointAimed - new_origin;
-				new_RayDirection.normalize();
-				//Ray3D new_ray = Ray3D(viewToWorld*new_origin, viewToWorld*new_RayDirection);
-				Ray3D new_ray = Ray3D(viewToWorld*new_origin, viewToWorld*new_RayDirection);
-				col = col + shadeRay(new_ray, 0, d_end, init_color, tree_root);
-			}
-			col[0] = col[0] / num_ray_dof;
-			col[1] = col[1] / num_ray_dof;
-			col[2] = col[2] / num_ray_dof;
+			//	Point3D new_origin = origin;
+			//	new_origin[0] += x_rand;
+			//	new_origin[1] += y_rand;
+			//	Vector3D new_RayDirection = pointAimed - new_origin;
+			//	new_RayDirection.normalize();
+			//	//Ray3D new_ray = Ray3D(viewToWorld*new_origin, viewToWorld*new_RayDirection);
+			//	Ray3D new_ray = Ray3D(viewToWorld*new_origin, viewToWorld*new_RayDirection);
+			//	col = col + shadeRay(new_ray, 0, d_end, init_color, tree_root);
+			//}
+			//col[0] = col[0] / num_ray_dof;
+			//col[1] = col[1] / num_ray_dof;
+			//col[2] = col[2] / num_ray_dof;
 
 			//render without depth of field
-			/*Ray3D new_ray = Ray3D(viewToWorld*origin, viewToWorld*RayDirection);
-			col = shadeRay(new_ray, 0, d_end, init_color, tree_root);*/
+			Ray3D new_ray = Ray3D(viewToWorld*origin, viewToWorld*RayDirection);
+			col = shadeRay(new_ray, 0, d_end, init_color, tree_root);
 
 
 
