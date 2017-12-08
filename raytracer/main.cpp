@@ -25,11 +25,11 @@ int main(int argc, char* argv[])
 	std::cout << "started";
 
 	Raytracer raytracer;
-	 int width = 1920;
-	 int height = 1080;
+	 //int width = 1920;
+	 //int height = 1080;
 
-	/*int width = 600;
-	int height = 600;*/
+	int width = 600;
+	int height = 600;
 
 	if (argc == 3) {
 		width = atoi(argv[1]);

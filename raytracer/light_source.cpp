@@ -13,7 +13,6 @@ implements light_source.h
 
 Colour CalculatePhong(Ray3D& ray, Point3D& lightPos, Colour& ambient) {
 	//Assume everything is in world coordinate 
-
 	Point3D intersectPoint = ray.intersection.point;
 	Vector3D normalVector = ray.intersection.normal;
 	normalVector.normalize();
@@ -26,15 +25,12 @@ Colour CalculatePhong(Ray3D& ray, Point3D& lightPos, Colour& ambient) {
 	Vector3D reflect = light_vector - 2 * (light_vector.dot(normalVector))*normalVector;
 	reflect.normalize();
 	difference.normalize();
-	//double cos_specular = fmax(difference.dot(normalVector), 0.0);
 	double cos_specular = fmax(reflect.dot(-viewVector), 0.0);
-	//std::cout << cos_specular << "\n";
 	double cos_diffuse = fmax(light_vector.dot(normalVector), 0.0);
 
 	double ka = 1;
 	double kd = 1;
 	double ks = 1;
-	//double ks = 3 - ka - kd;
 
 	Colour current_phong_color = (ka*ray.intersection.mat->ambient + kd*cos_diffuse*ray.intersection.mat->diffuse + ks*pow(cos_specular, ray.intersection.mat->specular_exp)*ray.intersection.mat->specular);
 	current_phong_color[0] = current_phong_color[0] * (ambient[0]);
@@ -56,6 +52,7 @@ Colour CalculatePhong(Ray3D& ray, Point3D& lightPos, Colour& ambient) {
 // before this function.  
 void PointLight::shade(Ray3D& ray) {
 	if (ray.intersection.mat->text_array != NULL) {
+		//compute texture color, find the u,v value
 		unsigned char* texture = ray.intersection.mat->text_array;
 
 		Vector3D nor = ray.intersection.normal;
@@ -87,7 +84,7 @@ void PointLight::shade(Ray3D& ray) {
 		ray.col = Colour(rf, gf, bf);
 	}
 	else {
-		//Assume everything is in world coordinate 
+		//calculate phong shading
 		Point3D lightPos = this->get_position();
 		Colour ambient = this->get_ambient_light();
 		Colour phongColor = CalculatePhong(ray, lightPos, ambient);
@@ -95,8 +92,6 @@ void PointLight::shade(Ray3D& ray) {
 	}
 
 }
-
-
 
 
 

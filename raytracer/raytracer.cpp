@@ -17,6 +17,9 @@
 #include <iostream>
 #include <cstdlib>
 
+int turn_on_BSP = 1;
+
+
 Raytracer::Raytracer() : _lightSource(NULL) {
 	_root = new SceneDagNode();
 }
@@ -72,7 +75,6 @@ void Raytracer::addObject_tree( SceneDagNode* parent,
 	
 	return;
 }
-
 
 
 
@@ -228,17 +230,9 @@ void Raytracer::traverseScene( SceneDagNode* node, Ray3D& ray ) {
 }
 
 void Raytracer::traverseScene_BSP( AABB_node* tree_node, Ray3D& ray ) {
-	//Material gold(Colour(0.3, 0.3, 0.3), Colour(0.75164, 0.60648, 0.22648),
-	//	Colour(0.628281, 0.555802, 0.366065),
-	//	51.2);
-	//Material jade(Colour(0, 0, 0), Colour(0.54, 0.89, 0.63),
-	//	Colour(0.316228, 0.316228, 0.316228),
-	//	12.8);
 
 	bool ray_intersect_BB = rayBBIntersect(tree_node->BB_max, tree_node->BB_min, (ray.origin - 1000*ray.dir), (ray.origin + 1000*ray.dir));
-	//bool ray_intersect_BB = true;
 	//check with current bounding box for intersection
-	//bool ray_intersect_BB = tree_node->cube_obj->intersect(ray, BB_worldToModel, BB_modelToWorld);
 	//if intersect
 	//if its leaf, calculate intersection
 	//else call traverseScene_BSP with left/right children
@@ -248,19 +242,16 @@ void Raytracer::traverseScene_BSP( AABB_node* tree_node, Ray3D& ray ) {
 				//is leaf, check for intersection with object
 			if (tree_node->scene_obj->obj->intersect(ray, tree_node->scene_obj->worldToModel, tree_node->scene_obj->modelToWorld)) {
 				ray.intersection.mat = tree_node->scene_obj->mat;
-				//std::cout << "leaf reached" << "\n";
 			}
 			return;
 		}
 		//right is not null
 		if (tree_node->right != NULL) {
-			//std::cout << "explore right" << "\n";
 			traverseScene_BSP(tree_node->right, ray);
 		}
 
 		//left is not null
 		if (tree_node->left != NULL) {
-			//std::cout << "explore left" << "\n";
 			traverseScene_BSP(tree_node->left, ray);
 		}
 
@@ -285,9 +276,7 @@ void Raytracer::computeShading( Ray3D& ray, int* phong_count, AABB_node* tree_ro
 		light_num ++;
    		curLight_temp = curLight_temp->next;
 	}
-	//std::cout << light_num << "\n";
 	double light_ratio = 1/light_num;
-	//std::cout <<"ratio   " << light_ratio << "\n";
 
     for (;;) {
         if (curLight == NULL) break;
@@ -300,18 +289,16 @@ void Raytracer::computeShading( Ray3D& ray, int* phong_count, AABB_node* tree_ro
 			ray_dir.normalize();
 			Ray3D shadow_ray = Ray3D((ray.intersection.point + 0.01 * ray.intersection.normal), ray_dir);
 			//switchBSP
-			//traverseScene(_root, shadow_ray);
-			traverseScene_BSP(tree_root, shadow_ray);
-			//double t_light = (curLight->light->get_position() - ray.intersection.point)/ray_dir;
+			if(turn_on_BSP)
+				traverseScene_BSP(tree_root, shadow_ray);
+			else
+				traverseScene(_root, shadow_ray);
 			Colour temp = Colour(0, 0, 0);
 			if (shadow_ray.intersection.none){
-				//TODO:check if the object is between light and start point
 				temp = ray.col;
 				curLight->light->shade(ray);
 				*phong_count = *phong_count + 1;
 				ray.col = light_ratio*ray.col + (1-light_ratio)*temp;
-				//ray.col = 0.6*ray.col + 0.4*temp;
-				//std::cout << ray.col << "\n";
 			}
 			else {
 				ray.col = ray.col + Colour(0, 0, 0);
@@ -333,12 +320,12 @@ void Raytracer::computeShading( Ray3D& ray, int* phong_count, AABB_node* tree_ro
 				ray_dir.normalize();
 				Ray3D shadow_ray = Ray3D((ray.intersection.point + 0.01 * ray.intersection.normal), ray_dir);
 				//switchBSP
-				//traverseScene(_root, shadow_ray);
-				traverseScene_BSP(tree_root, shadow_ray);
-				//double t_light = (curLight->light->get_position() - ray.intersection.point)/ray_dir;
+				if(turn_on_BSP)
+					traverseScene_BSP(tree_root, shadow_ray);
+				else
+					traverseScene(_root, shadow_ray);
 				Colour temp = Colour(0, 0, 0);
 				if (shadow_ray.intersection.none) {
-					//TODO:check if the object is between light and start point
 					temp = ray.col;
 					ray.col = CalculatePhong(ray, light_pos, ambient);
 					*phong_count = *phong_count + 1;
@@ -350,29 +337,6 @@ void Raytracer::computeShading( Ray3D& ray, int* phong_count, AABB_node* tree_ro
 			}//end of sampling loop
 			ray.col = col;	
 		}//end of area light
-
-
-		//====================================
-		// Colour temp = ray.col;
-		// for (int i = -1; i < 1; i++){
-		// 	Vector3D ray_dir = curLight->light->get_position() - ray.intersection.point;
-		// 	ray_dir[0] = ray_dir[0] + i;
-		// 	ray_dir[1] = ray_dir[1] + i;
-		// 	ray_dir[2] = ray_dir[2] + i;
-		// 	ray_dir.normalize();
-		// 	Ray3D shadow_ray = Ray3D((ray.intersection.point + 0.01 * ray_dir), ray_dir);
-		// 	traverseScene(_root, shadow_ray);
-		// 	curLight->light->shade(ray);
-		// 	if(shadow_ray.intersection.none){
-		// 		temp = temp + 0.2*ray.col;
-		// 	}
-			
-		// }
-		// ray.col = temp;
-		//std::cout << temp << "\n";
-		//====================================
-
-		//curLight->light->shade(ray);
         curLight = curLight->next;
     }
 }
@@ -396,40 +360,19 @@ void Raytracer::flushPixelBuffer( std::string file_name ) {
 
 Colour Raytracer::shadeRay( Ray3D& ray , int depth, int d_end, Colour col, AABB_node *tree_root) {
 	if (depth >= d_end){
-		//std::cout << "combine color" << col << "\n";
 		return col;
 	}
 	//switchBSP
-    //traverseScene(_root, ray); 
-	traverseScene_BSP(tree_root, ray);
-	//std::cout << "end traverse" << "\n";
+	if(turn_on_BSP)
+		traverseScene_BSP(tree_root, ray);
+	else
+		traverseScene(_root, ray); 
     // Don't bother shading if the ray didn't hit 
     // anything.
 	int phong_count = 0;
 
     if (!ray.intersection.none) {
-		// if (depth == 1) {
-		// 	//std::cout << "wrong" << "\n";
-		// 	//std::cout << "ray_origin" << ray.origin << "\n";
-		// 	//std::cout << "ray direction" << ray.dir << "\n";
-		// 	//traverseScene(_root, ray);
-		// 	//return Colour(0,0,0.9);
-		// }
         computeShading(ray, &phong_count, tree_root); 
-		//std::cout << "count" << phong_count<<"\n";
-		// ray.col[0] = ray.col[0] / phong_count;
-		// ray.col[1] = ray.col[1] / phong_count;
-		// ray.col[2] = ray.col[2] / phong_count;
-		//if (depth == 1) {
-		//	if (ray.intersection.point[2] > -6.9) {
-		//		if (col[0] != 0 || col[1] != 0 || col[2] != 0){
-		//			if (ray.col[0] != 0 || ray.col[1] != 0 || ray.col[2] != 0) {
-		//				std::cout << "prev color" << 255 * col << "\n";
-		//				std::cout << "cur color" << 255 * ray.col << "\n";
-		//			}
-		//		}
-		//	}
-		//}
 
 		Vector3D ray_dir = ray.dir;
 		ray_dir.normalize();
@@ -439,7 +382,6 @@ Colour Raytracer::shadeRay( Ray3D& ray , int depth, int d_end, Colour col, AABB_
 		ref_dir.normalize();
 		
 		Ray3D ref_ray = Ray3D((ray.intersection.point + 0.0001 * ray_n), ref_dir);
-		//std::cout << "combine color" << col << "\n";
 		if (depth == 0) {
 			return shadeRay(ref_ray, depth + 1, d_end, col + ray.col, tree_root);
 		}
@@ -448,21 +390,12 @@ Colour Raytracer::shadeRay( Ray3D& ray , int depth, int d_end, Colour col, AABB_
 		}
     }
 	else {
-		//std::cout << "combine color" << col << "\n";
 		return col;
 	}
 
     // You'll want to call shadeRay recursively (with a different ray, 
     // of course) here to implement reflection/refraction effects.  
 	//calculate reflection
-	//Vector3D ray_dir = ray.dir;
-	//ray_dir.normalize();
-	//Vector3D ray_n = ray.intersection.normal;
-	//ray_n.normalize();
-	//Vector3D ref_dir = ray_dir - 2*(ray.dir.dot(ray_n))*ray_n;
-	//Ray3D ref_ray = Ray3D(ray.intersection.point, ref_dir);
-	//return shadeRay(ref_ray, depth, d_end, col);
-    
 }	
 
 void Raytracer::render( int width, int height, Point3D eye, Vector3D view, 
@@ -491,81 +424,83 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 			imagePlane[1] = (-double(height)/2 + 0.5 + i)/factor;
 			imagePlane[2] = -1;
 
-			// TODO: Convert ray to world space and call 
 			// shadeRay(ray) to generate pixel colour. 	
 			Colour init_color = Colour(0, 0, 0);
 			Colour col = Colour(0, 0, 0);
-			int SA_times = 1;
+			//Supersampling, render four pixel from slightly differnt angle and combine into 1 pixel
+			int SA_times = 2;
+			int d_end = 1;
+			int turn_on_depth_of_field = 1;
 			double bias = (1.0 / factor) / SA_times;
-			/*for (int k = 0; k < SA_times; k++) {
+			for (int k = 0; k < SA_times; k++) {
 				for (int l = 0; l < SA_times; l++) {
 					Vector3D RayDirection = Vector3D(imagePlane[0] + bias*k, imagePlane[1] + bias*l, imagePlane[2]);
-					Ray3D ray = Ray3D(viewToWorld*origin, viewToWorld*RayDirection);
-					int d_end = 1;
-					col = col + (1.0/std::pow((double)SA_times,2)) * shadeRay(ray, 0, d_end, init_color, tree_root);
+					Colour current_color;
+					if (!turn_on_depth_of_field) {
+						Ray3D ray = Ray3D(viewToWorld*origin, viewToWorld*RayDirection);
+						Ray3D new_ray = Ray3D(viewToWorld*origin, viewToWorld*RayDirection);
+						current_color = shadeRay(new_ray, 0, d_end, init_color, tree_root);
+					}
+					else {
+						Vector3D RayDirection = Vector3D(imagePlane[0], imagePlane[1], imagePlane[2]);
+						Vector3D rayDirection_norm = RayDirection;
+						rayDirection_norm.normalize();
+						//find the focus point in the scene
+						Point3D pointAimed = origin + 6 * rayDirection_norm;
+						//defines number of random sample rays, move the camera view a little bit in all four directions and cascade 
+						//the color values to generate the out of focus effect
+						int num_ray_dof = 10;
+						for (int i = 0; i < num_ray_dof; i++) {
+							double x_rand, y_rand;
+							//generate random number:
+							if (i <= num_ray_dof/4) {
+								x_rand = ((double)rand() / RAND_MAX)/4;
+								y_rand = ((double)rand() / RAND_MAX)/4;
+							}
+							else if (i <= num_ray_dof/4){
+								x_rand = ((double)rand() / (RAND_MAX + 1))/4;
+								y_rand = ((double)rand() / (RAND_MAX + 1))/4;
+							}
+							else if (i <= 3*num_ray_dof/4) {
+								x_rand = ((double)rand() / (RAND_MAX)) / 4;
+								y_rand = ((double)rand() / (RAND_MAX + 1)) / 4;
+							}
+							else {
+								x_rand = ((double)rand() / (RAND_MAX + 1)) / 4;
+								y_rand = ((double)rand() / (RAND_MAX)) / 4;
+							}
+
+							Point3D new_origin = origin;
+							new_origin[0] += x_rand;
+							new_origin[1] += y_rand;
+							Vector3D new_RayDirection = pointAimed - new_origin;
+							new_RayDirection.normalize();
+							//Ray3D new_ray = Ray3D(viewToWorld*new_origin, viewToWorld*new_RayDirection);
+							Ray3D new_ray = Ray3D(viewToWorld*new_origin, viewToWorld*new_RayDirection);
+							current_color = current_color + shadeRay(new_ray, 0, d_end, init_color, tree_root);
+						}
+						current_color[0] = current_color[0] / num_ray_dof;
+						current_color[1] = current_color[1] / num_ray_dof;
+						current_color[2] = current_color[2] / num_ray_dof;
+					}
+					
+
+
+
+					col = col + (1.0 / std::pow((double)SA_times, 2)) * current_color;
 				}
-			}*/
+			}
 
 			//implement depth of field
 			//generate 10 random rays 
-			int d_end = 2;
 			Vector3D RayDirection = Vector3D(imagePlane[0], imagePlane[1], imagePlane[2]);
 			//RayDirection.normalize();
 			Vector3D rayDirection_norm = RayDirection;
 			rayDirection_norm.normalize();
 			Point3D pointAimed = origin + 6 * rayDirection_norm;
 
-			//int num_ray_dof = 1;
-			//for (int i = 0; i < num_ray_dof; i++) {
-			//	double x_rand, y_rand;
-			//	//generate random number:
-			//	if (i <= 5) {
-			//		x_rand = ((double)rand() / RAND_MAX)/4;
-			//		y_rand = ((double)rand() / RAND_MAX)/4;
-			//	}
-			//	else if (i <= 10){
-			//		x_rand = ((double)rand() / (RAND_MAX + 1))/4;
-			//		y_rand = ((double)rand() / (RAND_MAX + 1))/4;
-			//	}
-			//	else if (i <= 15) {
-			//		x_rand = ((double)rand() / (RAND_MAX)) / 4;
-			//		y_rand = ((double)rand() / (RAND_MAX + 1)) / 4;
-			//	}
-			//	else {
-			//		x_rand = ((double)rand() / (RAND_MAX + 1)) / 4;
-			//		y_rand = ((double)rand() / (RAND_MAX)) / 4;
-			//	}
-
-			//	Point3D new_origin = origin;
-			//	new_origin[0] += x_rand;
-			//	new_origin[1] += y_rand;
-			//	Vector3D new_RayDirection = pointAimed - new_origin;
-			//	new_RayDirection.normalize();
-			//	//Ray3D new_ray = Ray3D(viewToWorld*new_origin, viewToWorld*new_RayDirection);
-			//	Ray3D new_ray = Ray3D(viewToWorld*new_origin, viewToWorld*new_RayDirection);
-			//	col = col + shadeRay(new_ray, 0, d_end, init_color, tree_root);
-			//}
-			//col[0] = col[0] / num_ray_dof;
-			//col[1] = col[1] / num_ray_dof;
-			//col[2] = col[2] / num_ray_dof;
-
-			//render without depth of field
-			Ray3D new_ray = Ray3D(viewToWorld*origin, viewToWorld*RayDirection);
-			col = shadeRay(new_ray, 0, d_end, init_color, tree_root);
-
-
-
-
 			col.clamp();
-			//std::cout << "after" << col << "\n"; 
-			// if (col[0] >1 || col[1]>1 || col[2]>1){
-			// 	col = (1.0 / (double)d_end)*col;
-			// }
-			// double current_max = fmax(col[0], col[1]);
-			// current_max = fmax(current_max, col[2]);
-			// largest_color_value = fmax(largest_color_value, current_max);
 
-				
 			_rbuffer[i*width+j] = int(col[0]*255);
 			_gbuffer[i*width+j] = int(col[1]*255);
 			_bbuffer[i*width+j] = int(col[2]*255);
@@ -588,9 +523,6 @@ void Raytracer::computeBB( SceneDagNode* node)
 		node->BB_max = node->obj->BBmax(node->modelToWorld);
 		node->BB_min = node->obj->BBmin(node->modelToWorld);
 	}
-	// std::cout << "BB_MAX:  " << node->BB_max << "\n";
-	// std::cout << "BB_MIN:  " << node->BB_min << "\n";
-
 	SceneDagNode * childPtr = node->child;
 	while (childPtr != NULL){
 		computeBB(childPtr);
@@ -653,7 +585,6 @@ void Raytracer::buildAABBtree( SceneDagNode* node_list, AABB_node* tree_node)
 	SceneDagNode *right = new SceneDagNode();
 	//traverse through list of nodes and seperate into left and right
 	SceneDagNode *current_node = node_list->child;
-	//SceneDagNode o = *current_node;
 	while(current_node != NULL){
 		//find object center
 		Point3D object_center = current_node->modelToWorld * Point3D(0, 0, 0);
@@ -683,7 +614,6 @@ void Raytracer::buildAABBtree( SceneDagNode* node_list, AABB_node* tree_node)
 
 	buildAABBtree(left, left_tree_node);
 	buildAABBtree(right, right_tree_node);
-
 	//should not reach here
 	return;
 }
@@ -707,7 +637,6 @@ bool Raytracer::rayBBIntersect(const Point3D& BB_max, const Point3D& BB_min, con
 		return false;
 	}
 
-	//std::cout << "intersec" << "\n";
 	return true;
 }
 

@@ -46,7 +46,6 @@ bool UnitSquare::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	
 	//check if dir dot n = 0
 	if (ray_dir.dot(n) == 0){
-		//ray.intersection.none = true;
 		return false;
 	}
 	
@@ -57,7 +56,6 @@ bool UnitSquare::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	Point3D inter_p = ray_origin + t * ray_dir;
 	if (inter_p[0] < -0.5 || inter_p[0] > 0.5 || inter_p[1] < -0.5 || inter_p[1] > 0.5 || (inter_p[2]<-0.00001 || inter_p[2] > 0.00001)){
 		//outside unit square
-		//ray.intersection.none = true;
 		return false;
 	}
 
@@ -70,7 +68,6 @@ bool UnitSquare::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 		ray.intersection.normal = world_n;
 		ray.intersection.point = world_inter_p;
 		ray.intersection.t_value = t;
-		//std::cout << ray.intersection.point << "\n";
 		return true;
 	}
 	else if (ray.intersection.t_value >= t) {
@@ -79,7 +76,6 @@ bool UnitSquare::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 		ray.intersection.normal = world_n;
 		ray.intersection.point = world_inter_p;
 		ray.intersection.t_value = t;
-		//std::cout << ray.intersection.point << "\n";
 		return true;
 	}
 	else {
@@ -142,8 +138,6 @@ bool UnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 		ray.intersection.point = modelToWorld * inter_p;
 		return true;
 	}
-	// std::cout << "orgin" << ray_origin << "\n";
-	// std::cout << ray.intersection.point << "\n";
 	return false;
 	// Your goal here is to fill ray.intersection with correct values
 	// should an intersection occur.  This includes intersection.point, 
@@ -206,7 +200,6 @@ bool UnitCube::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 		ray.intersection.normal = world_n;
 		ray.intersection.point = world_inter_p;
 		ray.intersection.t_value = t;
-		//std::cout << ray.intersection.point << "\n";
 		return true;
 	}
 	else if (ray.intersection.t_value >= t) {
@@ -215,7 +208,6 @@ bool UnitCube::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 		ray.intersection.normal = world_n;
 		ray.intersection.point = world_inter_p;
 		ray.intersection.t_value = t;
-		//std::cout << ray.intersection.point << "\n";
 		return true;
 	}
 	else {
@@ -223,25 +215,14 @@ bool UnitCube::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 		//do not replace
 		return false;
 	}
-
-
-	//return false;
 }
 
 Point3D UnitSphere::BBmin(const Matrix4x4& modelToWorld){
 	Matrix4x4 s = Matrix4x4();
 	s.set_value(15, -1.0);
-	//s = [ 1  0  0  0 ]
-	//[ 0  1  0  0 ]
-	//[ 0  0  1  0 ]
-	//[ 0  0  0 -1 ]
 	//Note: in this case inverse of s is the same
 	Matrix4x4 m_transpose = modelToWorld.transpose();
 	Matrix4x4 r = modelToWorld*s*m_transpose;
-	// let (M S^-1 M^t) = R = [ r11 r12 r13 r14 ]  (note that R is symmetric: R=R^t)
-	// 			              [ r12 r22 r23 r24 ]
-	//    			          [ r13 r23 r33 r34 ]
-	//     			          [ r14 r24 r34 r44 ]
 	Point3D minxyz = Point3D();
 	//z
 	minxyz[2] = (r.get_value(11) + sqrt(r.get_value(11)*r.get_value(11) - r.get_value(15)*r.get_value(10)))/ r.get_value(15);
@@ -249,27 +230,15 @@ Point3D UnitSphere::BBmin(const Matrix4x4& modelToWorld){
 	minxyz[1] = (r.get_value(7) + sqrt(r.get_value(7)*r.get_value(7) - r.get_value(15)*r.get_value(5))) / r.get_value(15);
 	//x
 	minxyz[0] = (r.get_value(3) + sqrt(r.get_value(3)*r.get_value(3) - r.get_value(15)*r.get_value(0))) / r.get_value(15);
-	// z =  (r34 +/- sqrt(r34^2 - r44 r33) ) / r44
-	// y = (r24 +/- sqrt(r24^2 - r44 r22) ) / r44
-	// x = (r14 +/- sqrt(r14^2 - r44 r11) ) / r44
-
 	return minxyz;
 }
 
 Point3D UnitSphere::BBmax(const Matrix4x4& modelToWorld){
 	Matrix4x4 s = Matrix4x4();
 	s.set_value(15, -1.0);
-	//s = [ 1  0  0  0 ]
-	//[ 0  1  0  0 ]
-	//[ 0  0  1  0 ]
-	//[ 0  0  0 -1 ]
 	//Note: in this case inverse of s is the same
 	Matrix4x4 m_transpose = modelToWorld.transpose();
 	Matrix4x4 r = modelToWorld*s*m_transpose;
-	// let (M S^-1 M^t) = R = [ r11 r12 r13 r14 ]  (note that R is symmetric: R=R^t)
-	// 			              [ r12 r22 r23 r24 ]
-	//    			          [ r13 r23 r33 r34 ]
-	//     			          [ r14 r24 r34 r44 ]
 	Point3D maxxyz = Point3D();
 	//z
 	maxxyz[2] = (r.get_value(11) - sqrt(r.get_value(11)*r.get_value(11) - r.get_value(15)*r.get_value(10)))/ r.get_value(15);
@@ -277,9 +246,6 @@ Point3D UnitSphere::BBmax(const Matrix4x4& modelToWorld){
 	maxxyz[1] = (r.get_value(7) - sqrt(r.get_value(7)*r.get_value(7) - r.get_value(15)*r.get_value(5))) / r.get_value(15);
 	//x
 	maxxyz[0] = (r.get_value(3) - sqrt(r.get_value(3)*r.get_value(3) - r.get_value(15)*r.get_value(0))) / r.get_value(15);
-	// z =  (r34 +/- sqrt(r34^2 - r44 r33) ) / r44
-	// y = (r24 +/- sqrt(r24^2 - r44 r22) ) / r44
-	// x = (r14 +/- sqrt(r14^2 - r44 r11) ) / r44
 
 	return maxxyz;
 
@@ -310,10 +276,6 @@ Point3D UnitSquare::BBmax(const Matrix4x4& modelToWorld){
 	Point3D p2 = modelToWorld * Point3D(-0.5, 0.5, 0);
 	Point3D p3 = modelToWorld * Point3D(0.5, -0.5, 0);
 	Point3D p4 = modelToWorld * Point3D(0.5, 0.5, 0);
-	// std::cout<< "p1" << p1 << "\n";
-	// std::cout<< "p2" << p2 << "\n";
-	// std::cout<< "p3" << p3 << "\n";
-	// std::cout<< "p4" << p4 << "\n";
 
 	Point3D maxxyz = Point3D(0, 0, 0);
 	//x
