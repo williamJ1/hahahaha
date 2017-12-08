@@ -13,6 +13,77 @@ CSC418, SPRING 2005
 #include <chrono>
 #include <ctime>
 
+
+
+
+unsigned char* ReadBMP(char* filename)
+{
+	static unsigned char *texels;
+	static int width, height;
+
+	FILE *fd;
+	fd = fopen(filename, "rb");
+	if (fd == NULL)
+	{
+		printf("Error: fopen failed\n");
+		return NULL;
+	}
+
+	unsigned char header[54];
+
+	// Read header
+	fread(header, sizeof(unsigned char), 54, fd);
+
+	// Capture dimensions
+	width = *(int*)&header[18];
+	height = *(int*)&header[22];
+
+	int padding = 0;
+
+	// Calculate padding
+	while ((width * 3 + padding) % 4 != 0)
+	{
+		padding++;
+	}
+
+	// Compute new width, which includes padding
+	int widthnew = width * 3 + padding;
+
+	// Allocate memory to store image data (non-padded)
+	texels = (unsigned char *)malloc(width * height * 3 * sizeof(unsigned char));
+	if (texels == NULL)
+	{
+		printf("Error: Malloc failed\n");
+		return NULL;
+	}
+
+	// Allocate temporary memory to read widthnew size of data
+	unsigned char* data = (unsigned char *)malloc(widthnew * sizeof(unsigned int));
+
+	// Read row by row of data and remove padded data.
+	for (int i = 0; i<height; i++)
+	{
+		// Read widthnew length of data
+		fread(data, sizeof(unsigned char), widthnew, fd);
+
+		// Retain width length of data, and swizzle RB component.
+		// BMP stores in BGR format, my usecase needs RGB format
+		for (int j = 0; j < width * 3; j += 3)
+		{
+			int index = (i * width * 3) + (j);
+			texels[index + 0] = data[j + 2];
+			texels[index + 1] = data[j + 1];
+			texels[index + 2] = data[j + 0];
+		}
+	}
+
+	free(data);
+	fclose(fd);
+
+	return texels;
+}
+
+
 int main(int argc, char* argv[])
 {
 	// Build your scene and setup your camera here, by calling 
@@ -41,6 +112,9 @@ int main(int argc, char* argv[])
 	Vector3D view(0, 0, -1);
 	Vector3D up(0, 1, 0);
 	double fov = 60;
+
+	//read texture
+	unsigned char* texture = ReadBMP("tiles.bmp");
 
 	// Defines a material for shading.
 	Material gold(Colour(0.3, 0.3, 0.3), Colour(0.75164, 0.60648, 0.22648),
