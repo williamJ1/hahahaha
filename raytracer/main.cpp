@@ -45,22 +45,22 @@ int main(int argc, char* argv[])
 	// Defines a material for shading.
 	Material gold(Colour(0.3, 0.3, 0.3), Colour(0.75164, 0.60648, 0.22648),
 		Colour(0.628281, 0.555802, 0.366065),
-		51.2);
+		51.2, NULL);
 	Material jade(Colour(0, 0, 0), Colour(0.54, 0.89, 0.63),
 		Colour(0.316228, 0.316228, 0.316228),
-		12.8);
+		12.8, NULL);
 
 	Material orange(Colour(0, 0, 0), Colour(1.0, 0.6, 0.0),
 		Colour(0.316228, 0.316228, 0.316228),
-		30.0);
+		30.0, NULL);
 
 	Material yellow(Colour(0, 0, 0), Colour(0.0, 1.0, 1.0),
 		Colour(0.316228, 0.316228, 0.316228),
-		30.0);
+		30.0, NULL);
 
 	Material blue(Colour(0, 0, 0), Colour(0.0, 0.0, 1.0),
 		Colour(0.316228, 0.316228, 0.316228),
-		30.0);
+		30.0, NULL);
 
 
 
