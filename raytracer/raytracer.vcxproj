@@ -148,6 +148,9 @@
     <ClInclude Include="scene_object.h" />
     <ClInclude Include="util.h" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="tiles.bmp" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
